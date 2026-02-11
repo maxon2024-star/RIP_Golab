@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Услуги - Расчет фотоэффекта</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Расчет фотоэффекта</h1>
+        <div class="request-summary">
+            <span class="summary-text">В заявке: <span id="request-count">{{.count}}</span> услуг</span>
+            <a href="/request" class="request-link">Просмотреть заявку</a>
+        </div>
+    </header>
+
+    <main>
+        <h2>Доступные диапазоны излучения</h2>
+        <div class="services-grid">
+            {{range .services}}
+            <div class="service-card" onclick="window.location.href='/service/{{.ID}}'">
+                <img src="{{.ImageURL}}" alt="{{.Name}}">
+                <div class="service-info">
+                    <h3>{{.Name}}</h3>
+                    <p class="wavelength">Длина волны: {{.Wavelength}}</p>
+                    <p class="energy">Энергия: {{.EnergyRange}}</p>
+                    <p class="intensity">Интенсивность: {{.Intensity}} Вт/м²</p>
+                    <div class="button-group">
+                        <button class="add-to-request-btn" onclick="addToRequest({{.ID}}, event)">➕ Добавить в заявку</button>
+                        <button class="detail-btn" onclick="viewDetails({{.ID}}, event)">Подробнее</button>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </main>
+</div>
+
+<script>
+    async function addToRequest(serviceId, event) {
+        event.stopPropagation();
+
+        const response = await fetch('/add-to-request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                service_id: serviceId,
+                quantity: 1,
+                area: 10,
+                work_function: 2.3,
+                efficiency: 18,
+                comment: '',
+                result: '0.0 мА',
+                order: 1
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('request-count').textContent = data.count;
+
+            // Показываем визуальный индикатор добавления
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✓ В заявке';
+            button.style.backgroundColor = '#10b981';
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            }, 2000);
+        }
+    }
+
+    function viewDetails(serviceId, event) {
+        event.stopPropagation();
+        window.location.href = `/service/${serviceId}`;
+    }
+</script>
+</body>
+</html>

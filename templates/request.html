@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Заявка - Расчет фотоэффекта</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>📋 Заявка №12345</h1>
+        <p>Расчет тока фотоэффекта по диапазонам</p>
+        <a href="/" class="back-btn">← Назад к услугам</a>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <span>Количество диапазонов</span>
+            <h2 id="count">0</h2>
+        </div>
+        <div class="stat-card green">
+            <span>Общий ток</span>
+            <h2 id="totalCurrent">0 мА</h2>
+        </div>
+    </div>
+
+    <h2 class="section-title">📦 Состав заявки</h2>
+
+    <div id="cart"></div>
+
+    <div class="total-box">
+        <h3>Общий ток фотоэффекта:</h3>
+        <div id="finalTotal">0 мА</div>
+        <button class="submit-btn">📤 Отправить расчет</button>
+    </div>
+
+</div>
+
+<script>
+    let items = [
+        {
+            id: 1,
+            name: "Видимый свет",
+            current: 12.5,
+            color: "#8b5cf6",
+            intensity: 100,
+            area: 10,
+            workFunction: 2.3,
+            efficiency: 18,
+            comment: "",
+            order: 1,
+            isMain: false
+        },
+        {
+            id: 2,
+            name: "УФ",
+            current: 8.3,
+            color: "#f59e0b",
+            intensity: 45,
+            area: 10,
+            workFunction: 2.3,
+            efficiency: 18,
+            comment: "",
+            order: 2,
+            isMain: false
+        },
+        {
+            id: 3,
+            name: "Инфракрасное",
+            current: 5.7,
+            color: "#10b981",
+            intensity: 15,
+            area: 10,
+            workFunction: 2.3,
+            efficiency: 18,
+            comment: "",
+            order: 3,
+            isMain: true
+        }
+    ];
+
+    function render() {
+        const cart = document.getElementById("cart");
+        cart.innerHTML = "";
+
+        let total = 0;
+
+        items.forEach(item => {
+            total += item.current;
+
+            cart.innerHTML += `
+                <div class="card" style="border-color:${item.color}">
+                    <div class="card-header" style="background:${item.color}">
+                        <h3>${item.name}</h3>
+                        <button class="remove-btn" onclick="removeItem(${item.id})">×</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label>Интенсивность (Вт/м²)</label>
+                                <input type="number" value="${item.intensity}" min="0" step="0.1"
+                                       onchange="updateItem(${item.id}, 'intensity', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Площадь (см²)</label>
+                                <input type="number" value="${item.area}" min="0.1" step="0.1"
+                                       onchange="updateItem(${item.id}, 'area', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Работа выхода (эВ)</label>
+                                <input type="number" value="${item.workFunction}" min="0.1" step="0.1"
+                                       onchange="updateItem(${item.id}, 'workFunction', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>КПД (%)</label>
+                                <input type="number" value="${item.efficiency}" min="0" max="100" step="0.1"
+                                       onchange="updateItem(${item.id}, 'efficiency', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Порядок</label>
+                                <input type="number" value="${item.order}" min="1"
+                                       onchange="updateItem(${item.id}, 'order', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Комментарий</label>
+                                <input type="text" value="${item.comment}" placeholder="Доп. параметры..."
+                                       onchange="updateItem(${item.id}, 'comment', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="isMain-${item.id}" ${item.isMain ? 'checked' : ''}
+                                   onchange="toggleMain(${item.id})">
+                            <label for="isMain-${item.id}">Основной диапазон</label>
+                        </div>
+
+                        <div class="result-section">
+                            <div class="result">
+                                Результат: <span class="result-value">${item.current} мА</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById("count").innerText = items.length;
+        document.getElementById("totalCurrent").innerText = total.toFixed(1) + " мА";
+        document.getElementById("finalTotal").innerText = total.toFixed(1) + " мА";
+    }
+
+    function removeItem(id) {
+        items = items.filter(i => i.id !== id);
+        render();
+    }
+
+    function updateItem(id, property, value) {
+        const itemIndex = items.findIndex(i => i.id === id);
+        if (itemIndex !== -1) {
+            items[itemIndex][property] = parseFloat(value) || value;
+            // Пересчитываем ток (в реальном приложении здесь будет вызов API)
+            items[itemIndex].current = recalculateCurrent(items[itemIndex]);
+            render();
+        }
+    }
+
+    function toggleMain(id) {
+        // Снимаем галочку "основной" со всех других элементов
+        items = items.map(item => ({
+            ...item,
+            isMain: item.id === id
+        }));
+        render();
+    }
+
+    function recalculateCurrent(item) {
+        // Простая модель расчета тока фотоэффекта
+        // I = η * A * P / (e * h * ν)
+        // где η - КПД, A - площадь, P - мощность, e - заряд электрона, h - постоянная Планка, ν - частота
+        // Упрощенная формула для демонстрации: I = (η/100) * A * I0
+        // где I0 - базовая интенсивность (условно привязана к диапазону)
+
+        // Для видимого света базовый ток ~0.125 мА при 100 Вт/м², 10 см², 18% КПД
+        let baseCurrent = 0.125;
+        if(item.name.includes("УФ")) baseCurrent = 0.083;
+        if(item.name.includes("Инфра")) baseCurrent = 0.057;
+
+        return (baseCurrent * item.intensity / 100 * item.area / 10 * item.efficiency / 18).toFixed(2);
+    }
+
+    render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.service.Name}} - Подробности</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Расчет фотоэффекта</h1>
+        <div class="request-summary">
+            <a href="/" class="back-link">← Назад к услугам</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="service-detail-card">
+            <img src="{{.service.ImageURL}}" alt="{{.service.Name}}">
+            <div class="service-detail-info">
+                <h2>{{.service.Name}}</h2>
+                <p class="description">{{.service.Description}}</p>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <h4>Длина волны</h4>
+                        <p>{{.service.Wavelength}}</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>Энергия фотонов</h4>
+                        <p>{{.service.EnergyRange}}</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>Частота</h4>
+                        <p>{{.service.Frequency}}</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>Интенсивность</h4>
+                        <p>{{.service.Intensity}} Вт/м²</p>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Параметры для расчета</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Площадь (см²)</label>
+                            <input type="number" id="area" value="10" min="0.1" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Работа выхода (эВ)</label>
+                            <input type="number" id="workFunction" value="2.3" min="0.1" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>КПД (%)</label>
+                            <input type="number" id="efficiency" value="18" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Комментарий</label>
+                            <input type="text" id="comment" placeholder="Доп. параметры...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="add-to-request-btn detail-btn" onclick="addToRequest({{.service.ID}})">➕ Добавить в заявку</button>
+                    <a href="/" class="back-btn secondary-btn">← Назад к услугам</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    async function addToRequest(serviceId) {
+        const area = parseFloat(document.getElementById('area').value);
+        const workFunction = parseFloat(document.getElementById('workFunction').value);
+        const efficiency = parseFloat(document.getElementById('efficiency').value);
+        const comment = document.getElementById('comment').value;
+
+        const response = await fetch('/add-to-request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                service_id: serviceId,
+                quantity: 1,
+                area: area,
+                work_function: workFunction,
+                efficiency: efficiency,
+                comment: comment,
+                result: '0.0 мА',
+                order: 1
+            })
+        });
+
+        if (response.ok) {
+            // Показываем сообщение о добавлении
+            const btn = document.querySelector('.add-to-request-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Добавлено в заявку!';
+            btn.style.backgroundColor = '#10b981';
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.backgroundColor = '';
+            }, 2000);
+        } else {
+            alert('Ошибка при добавлении услуги');
+        }
+    }
+</script>
+</body>
+</html>

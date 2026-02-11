@@ -1,0 +1,528 @@
+:root {
+    --primary: #2563eb;
+    --secondary: #059669;
+    --accent: #8b5cf6;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --background: #f9fafb;
+    --text: #1f2937;
+    --border: #e5e7eb;
+    --card-bg: #ffffff;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --radius: 12px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 30px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+}
+
+.header h1 {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+    color: var(--primary);
+}
+
+.header p {
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: var(--primary);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.3s;
+    z-index: 10;
+}
+
+.back-btn:hover {
+    background-color: #1e40af;
+}
+
+.back-btn.secondary-btn {
+    position: static;
+    margin-top: 20px;
+    display: inline-block;
+    width: auto;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.stat-card.green {
+    border-color: var(--secondary);
+}
+
+.stat-card span {
+    display: block;
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.stat-card h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-card.green h2 {
+    color: var(--secondary);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin: 25px 0 20px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#cart {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 2px solid #e5e7eb;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    color: white;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.remove-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.remove-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.control-group label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.control-group input {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #f0f9ff;
+    border-radius: 8px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary);
+}
+
+.checkbox-group label {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.result-section {
+    padding: 16px;
+    background-color: #e0f2fe;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary);
+}
+
+.result {
+    font-size: 14px;
+    color: #0369a1;
+    margin-bottom: 8px;
+}
+
+.result-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.total-box {
+    background: var(--secondary);
+    color: white;
+    padding: 24px;
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.3);
+}
+
+.total-box h3 {
+    font-size: 16px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.total-box #finalTotal {
+    font-size: 42px;
+    font-weight: 800;
+    margin: 16px 0;
+}
+
+.submit-btn {
+    background: white;
+    color: var(--secondary);
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+/* Стили для страницы деталей услуги */
+.service-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    padding: 25px;
+}
+
+.service-detail-card img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.service-detail-info h2 {
+    margin-bottom: 15px;
+    color: var(--text);
+}
+
+.description {
+    margin-bottom: 20px;
+    color: #6b7280;
+    line-height: 1.7;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.detail-item h4 {
+    margin-bottom: 5px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.detail-item p {
+    color: #6b7280;
+}
+
+.form-section {
+    margin: 25px 0;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.form-section h3 {
+    margin-bottom: 15px;
+    color: var(--text);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.form-group input {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.add-to-request-btn, .detail-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    flex: 1;
+    min-width: 150px;
+}
+
+.add-to-request-btn {
+    background-color: var(--primary);
+    color: white;
+}
+
+.add-to-request-btn:hover {
+    background-color: #1e40af;
+}
+
+.detail-btn {
+    background-color: var(--secondary);
+    color: white;
+}
+
+.detail-btn:hover {
+    background-color: #047857;
+}
+
+/* Стили для главной страницы услуг */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.service-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.service-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.service-info {
+    padding: 20px;
+}
+
+.service-info h3 {
+    margin-bottom: 10px;
+    color: var(--text);
+}
+
+.wavelength, .energy, .intensity {
+    margin-bottom: 8px;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+/* Стили для шапки */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+    color: var(--primary);
+    font-size: 1.8rem;
+}
+
+.request-summary {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.summary-text {
+    font-weight: 600;
+    color: var(--secondary);
+}
+
+.request-link, .back-link {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: var(--primary);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.request-link:hover, .back-link:hover {
+    background-color: #1e40af;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    .controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .back-btn {
+        position: static;
+        margin-top: 10px;
+    }
+}
