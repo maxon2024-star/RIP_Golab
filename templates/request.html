@@ -119,21 +119,10 @@
                                        onchange="updateItem(${item.id}, 'efficiency', this.value)">
                             </div>
                             <div class="control-group">
-                                <label>Порядок</label>
-                                <input type="number" value="${item.order}" min="1"
-                                       onchange="updateItem(${item.id}, 'order', this.value)">
-                            </div>
-                            <div class="control-group">
                                 <label>Комментарий</label>
                                 <input type="text" value="${item.comment}" placeholder="Доп. параметры..."
                                        onchange="updateItem(${item.id}, 'comment', this.value)">
                             </div>
-                        </div>
-
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="isMain-${item.id}" ${item.isMain ? 'checked' : ''}
-                                   onchange="toggleMain(${item.id})">
-                            <label for="isMain-${item.id}">Основной диапазон</label>
                         </div>
 
                         <div class="result-section">

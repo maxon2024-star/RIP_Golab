@@ -17,7 +17,35 @@
 
     <main>
         <div class="service-detail-card">
-            <img src="{{.service.ImageURL}}" alt="{{.service.Name}}">
+            <div class="video-wrapper">
+
+                <div id="videoLoader" class="video-loader">
+                    <div class="spinner"></div>
+                </div>
+
+                <div class="video-container">
+                    <video id="serviceVideo"
+                           autoplay
+                           muted
+                           loop
+                           playsinline
+                           preload="auto">
+
+                        <source src="{{.videoURL}}" type="video/mp4">
+                        Ваш браузер не поддерживает видео.
+                    </video>
+                </div>
+
+            </div>
+            <script>
+                const video = document.getElementById("serviceVideo");
+                const loader = document.getElementById("videoLoader");
+
+                video.addEventListener("loadeddata", function() {
+                    loader.style.display = "none";
+                    video.style.opacity = "1";
+                });
+            </script>
             <div class="service-detail-info">
                 <h2>{{.service.Name}}</h2>
                 <p class="description">{{.service.Description}}</p>
@@ -64,7 +92,10 @@
 
                 <div class="button-group">
                     <button class="add-to-request-btn detail-btn" onclick="addToRequest({{.service.ID}})">➕ Добавить в заявку</button>
-                    <a href="/" class="back-btn secondary-btn">← Назад к услугам</a>
+                    <div class="request-summary">
+                        <a href="/request" class="request-link">Просмотреть заявку</a>
+                    </div>
+
                 </div>
             </div>
         </div>

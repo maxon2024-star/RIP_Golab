@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type Handler struct {
@@ -41,8 +42,15 @@ func (h *Handler) GetServiceDetail(c *gin.Context) {
 		return
 	}
 
+	videoURL := service.ImageURL
+
+	videoURL = strings.Replace(videoURL, ".jpg", ".mp4", 1)
+	videoURL = strings.Replace(videoURL, ".png", ".mp4", 1)
+	videoURL = strings.Replace(videoURL, ".jpeg", ".mp4", 1)
+
 	c.HTML(http.StatusOK, "service_detail.html", gin.H{
-		"service": service,
+		"service":  service,
+		"videoURL": videoURL,
 	})
 }
 
@@ -63,7 +71,11 @@ func (h *Handler) AddToRequest(c *gin.Context) {
 	}
 
 	h.repo.AddToRequest(item)
-	c.JSON(http.StatusOK, gin.H{"status": "added", "count": h.repo.GetRequestCount()})
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "added",
+		"count":  h.repo.GetRequestCount(),
+	})
 }
 
 func (h *Handler) UpdateRequest(c *gin.Context) {
@@ -75,7 +87,10 @@ func (h *Handler) UpdateRequest(c *gin.Context) {
 	}
 
 	h.repo.UpdateRequestItem(item)
-	c.JSON(http.StatusOK, gin.H{"status": "updated"})
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "updated",
+	})
 }
 
 func (h *Handler) RemoveFromRequest(c *gin.Context) {
@@ -89,5 +104,9 @@ func (h *Handler) RemoveFromRequest(c *gin.Context) {
 	}
 
 	h.repo.RemoveFromRequest(reqBody.ServiceID)
-	c.JSON(http.StatusOK, gin.H{"status": "removed", "count": h.repo.GetRequestCount()})
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "removed",
+		"count":  h.repo.GetRequestCount(),
+	})
 }

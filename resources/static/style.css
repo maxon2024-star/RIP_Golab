@@ -4,7 +4,7 @@
     --accent: #8b5cf6;
     --warning: #f59e0b;
     --danger: #ef4444;
-    --background: #f9fafb;
+    --background: #F7F9FF;
     --text: #1f2937;
     --border: #e5e7eb;
     --card-bg: #ffffff;
@@ -346,8 +346,8 @@ body {
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
 
 .form-group {
@@ -374,6 +374,7 @@ body {
     gap: 15px;
     flex-wrap: wrap;
     margin-top: 20px;
+    justify-content: center;
 }
 
 .add-to-request-btn, .detail-btn {
@@ -489,8 +490,66 @@ header h1 {
 .request-link:hover, .back-link:hover {
     background-color: #1e40af;
 }
+.video-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
 
-@media (max-width: 768px) {
+.video-container {
+    position: relative;
+    width: 100%;
+    max-width: 850px;          /* Максимальная ширина на десктопе */
+    aspect-ratio: 16 / 9;      /* Пропорции 16:9 */
+    overflow: hidden;
+    border-radius: 16px;
+    background: #000;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    margin: 0 auto;
+}
+
+/* Само видео */
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;         /* Заполняет контейнер, может обрезаться */
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+/* Если нужно показывать видео целиком с чёрными полосами, замените cover на contain */
+
+/* Лоадер поверх видео */
+.video-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #f3f4f6;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;                /* Чтобы лоадер был выше видео */
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #e5e7eb;
+    border-top: 5px solid #3b6ef5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 800px) {
     .container {
         padding: 15px;
     }
@@ -525,4 +584,16 @@ header h1 {
         position: static;
         margin-top: 10px;
     }
+
+    .bottom-action {
+        margin-top: 50px;
+        text-align: center;
+    }
+
+    .cart-button {
+        max-width: 400px;
+        margin: 0 auto;
+        font-size: 18px;
+    }
+
 }
