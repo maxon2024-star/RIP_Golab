@@ -2,138 +2,234 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Заявка - Расчет фотоэффекта</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заявка на расчет - Фотоэффект</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-
-<div class="container">
-    <div class="header">
-        <h1>📋 Заявка на расчет фотоэффекта</h1>
-        <p>Расчет тока фотоэффекта от распределения излучения по диапазонам</p>
-        <a href="/" class="back-btn">← Назад к диапазонам</a>
-    </div>
-
-    <div class="stats">
-        <div class="stat-card">
-            <span>Количество диапазонов</span>
-            <h2 id="count">0</h2>
+<div class="app-container">
+    <!-- Header (БЕЗ корзины) -->
+    <header class="main-header">
+        <div class="header-top">
+            <h1 class="app-title">⚡ Фотоэффект</h1>
         </div>
-        <div class="stat-card green">
-            <span>Общий ток фотоэффекта</span>
-            <h2 id="totalCurrent">0 мА</h2>
+    </header>
+
+    <!-- Main Content -->
+    <main class="request-container">
+        <!-- Request Info Card -->
+        <div class="request-info-card">
+            <div class="info-header">
+                <i class="fas fa-clipboard-list"></i>
+                <h2>Параметры заявки на эксперимент</h2>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Номер заявки</span>
+                    <span class="info-value">#12345</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Диапазонов излучения</span>
+                    <span class="info-value" id="ranges-count">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Общий ток фотоэффекта</span>
+                    <span class="info-value total" id="total-current">0 мА</span>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <h2 class="section-title">📦 Состав заявки на эксперимент</h2>
+        <!-- Table Header Card -->
+        <div class="table-header-card">
+            <div class="table-header">
+                <div class="col-image">Изображение</div>
+                <div class="col-name">Диапазон излучения</div>
+                <div class="col-specs">Характеристики</div>
+                <div class="col-params">Параметры эксперимента</div>
+                <div class="col-result">Ток фотоэффекта</div>
+                <div class="col-action"></div>
+            </div>
+        </div>
 
-    <div id="cart"></div>
+        <!-- Items Container -->
+        <div id="cart" class="items-container"></div>
 
-    <div class="total-box">
-        <h3>Суммарный ток фотоэлектронов:</h3>
-        <div id="finalTotal">0 мА</div>
-        <button class="submit-btn">📤 Отправить расчет</button>
-    </div>
+        <!-- Total Card -->
+        <div class="total-card">
+            <div class="total-row">
+                <span>Суммарный ток фотоэлектронов:</span>
+                <span class="total-value" id="final-total">0 мА</span>
+            </div>
+            <button class="submit-btn">
+                <i class="fas fa-paper-plane"></i>
+                <span>Отправить расчет</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Главная</span>
+        </a>
+        <a href="/request" class="nav-item active">
+            <i class="fas fa-file-alt"></i>
+            <span>Заявка</span>
+        </a>
+<!--        <a href="#" class="nav-item">-->
+<!--            <i class="fas fa-user"></i>-->
+<!--            <span>Профиль</span>-->
+<!--        </a>-->
+    </nav>
 </div>
 
 <script>
     let radiationRanges = [];
 
     async function loadRequest() {
-        const response = await fetch('/request');
+        const response = await fetch('/request?format=json');
         if (response.ok) {
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+            const data = await response.json();
+            radiationRanges = data.items || [];
 
-            const itemsData = doc.querySelector('#items-data');
-            if (itemsData) {
-                radiationRanges = JSON.parse(itemsData.textContent);
-                render();
+            // Если заявка пустая, добавляем примеры для демонстрации
+            if (radiationRanges.length === 0) {
+                radiationRanges = [
+                    {
+                        service_id: 2,
+                        name: "Инфракрасное излучение",
+                        image_url: "http://localhost:9000/physicsservice/infrared.jpg",
+                        energy_range: "1.24 - 1.77 эВ",
+                        wavelength: "700 нм - 1 мм",
+                        frequency: "300 ГГц - 430 ТГц",
+                        intensity: 15,
+                        area: 10,
+                        work_function: 2.3,
+                        efficiency: 18,
+                        comment: "Низкоэнергетический диапазон",
+                        order: 1
+                    },
+                    {
+                        service_id: 3,
+                        name: "Видимый свет",
+                        image_url: "http://localhost:9000/physicsservice/visible.jpg",
+                        energy_range: "1.77 - 3.26 эВ",
+                        wavelength: "380 - 700 нм",
+                        frequency: "430 - 790 ТГц",
+                        intensity: 100,
+                        area: 10,
+                        work_function: 2.3,
+                        efficiency: 18,
+                        comment: "Базовый эксперимент",
+                        order: 2
+                    },
+                    {
+                        service_id: 4,
+                        name: "Ультрафиолетовое излучение",
+                        image_url: "http://localhost:9000/physicsservice/uv.jpg",
+                        energy_range: "3.1 - 124 эВ",
+                        wavelength: "10 - 400 нм",
+                        frequency: "790 ТГц - 30 ПГц",
+                        intensity: 45,
+                        area: 10,
+                        work_function: 2.3,
+                        efficiency: 18,
+                        comment: "Высокая энергия фотонов",
+                        order: 3
+                    }
+                ];
             }
+
+            render();
         }
     }
 
     function render() {
         const cart = document.getElementById("cart");
         cart.innerHTML = "";
-
         let totalCurrent = 0;
 
         radiationRanges.forEach(range => {
             const current = calculatePhotoCurrent(range);
-            range.current = current;
             totalCurrent += current;
 
             cart.innerHTML += `
-                <div class="card" style="border-color:${range.color}">
-                    <div class="card-header" style="background:${range.color}">
-                        <h3>${range.name}</h3>
-                        <button class="remove-btn" onclick="removeRange(${range.service_id})">×</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <label>Частота излучения</label>
-                                <input type="text" value="${range.frequency}" disabled>
+                <div class="item-card">
+                    <div class="item-grid">
+                        <div class="col-image">
+                            <img src="${range.image_url}" alt="${range.name}" class="item-image" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
+                        </div>
+                        <div class="col-name">
+                            <h4>${range.name}</h4>
+                            <span class="item-id">#${range.service_id}</span>
+                        </div>
+                        <div class="col-specs">
+                            <div class="mini-spec">
+                                <i class="fas fa-bolt"></i>
+                                <span>${range.energy_range}</span>
                             </div>
-                            <div class="control-group">
-                                <label>Энергия фотонов (эВ)</label>
-                                <input type="text" value="${range.energy_range}" disabled>
+                            <div class="mini-spec">
+                                <i class="fas fa-wave-square"></i>
+                                <span>${range.wavelength}</span>
                             </div>
-                            <div class="control-group">
-                                <label>Интенсивность потока (Вт/м²)</label>
+                            <div class="mini-spec">
+                                <i class="fas fa-broadcast-tower"></i>
+                                <span>${range.frequency}</span>
+                            </div>
+                        </div>
+                        <div class="col-params">
+                            <div class="param-input">
+                                <label>Интенсивность (Вт/м²)</label>
                                 <input type="number" value="${range.intensity}" min="0" step="0.1"
                                        onchange="updateRange(${range.service_id}, 'intensity', this.value)">
                             </div>
-                            <div class="control-group">
+                            <div class="param-input">
                                 <label>Площадь катода (см²)</label>
                                 <input type="number" value="${range.area}" min="0.1" step="0.1"
                                        onchange="updateRange(${range.service_id}, 'area', this.value)">
                             </div>
-                            <div class="control-group">
+                            <div class="param-input">
                                 <label>Работа выхода (эВ)</label>
                                 <input type="number" value="${range.work_function}" min="0.1" step="0.1"
                                        onchange="updateRange(${range.service_id}, 'work_function', this.value)">
                             </div>
-                            <div class="control-group">
-                                <label>Квантовая эффективность (%)</label>
+                            <div class="param-input">
+                                <label>Эффективность (%)</label>
                                 <input type="number" value="${range.efficiency}" min="0" max="100" step="0.1"
                                        onchange="updateRange(${range.service_id}, 'efficiency', this.value)">
                             </div>
-                            <div class="control-group">
+                            <div class="param-input full-width">
                                 <label>Описание эксперимента</label>
                                 <input type="text" value="${range.comment}" placeholder="Параметры опыта..."
                                        onchange="updateRange(${range.service_id}, 'comment', this.value)">
                             </div>
                         </div>
-
-                        <div class="result-section">
-                            <div class="result">
-                                Ток фотоэффекта: <span class="result-value">${current.toFixed(2)} мА</span>
-                            </div>
+                        <div class="col-result">
+                            <span class="result-value">${current.toFixed(2)} мА</span>
+                        </div>
+                        <div class="col-action">
+                            <button class="remove-btn" onclick="removeRange(${range.service_id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
         });
 
-        document.getElementById("count").innerText = radiationRanges.length;
-        document.getElementById("totalCurrent").innerText = totalCurrent.toFixed(2) + " мА";
-        document.getElementById("finalTotal").innerText = totalCurrent.toFixed(2) + " мА";
+        document.getElementById("ranges-count").textContent = radiationRanges.length;
+        document.getElementById("total-current").textContent = totalCurrent.toFixed(2) + " мА";
+        document.getElementById("final-total").textContent = totalCurrent.toFixed(2) + " мА";
     }
 
     async function removeRange(serviceId) {
         const response = await fetch('/remove-from-request', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                service_id: serviceId
-            })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({service_id: serviceId})
         });
-
         if (response.ok) {
             radiationRanges = radiationRanges.filter(r => r.service_id !== serviceId);
             render();
@@ -144,41 +240,22 @@
         const rangeIndex = radiationRanges.findIndex(r => r.service_id === serviceId);
         if (rangeIndex !== -1) {
             radiationRanges[rangeIndex][property] = parseFloat(value) || value;
-
             const response = await fetch('/update-request', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(radiationRanges[rangeIndex])
             });
-
-            if (response.ok) {
-                render();
-            }
+            if (response.ok) render();
         }
     }
 
     function calculatePhotoCurrent(range) {
-        // Формула тока фотоэффекта: I = η * e * P / (h * ν)
-        // Упрощенная модель для демонстрации
-        const baseCurrent = range.intensity * range.area * range.efficiency / 1000;
-        return baseCurrent;
+        // Упрощенная формула расчета тока фотоэффекта
+        // I = η * e * P / (h * ν)
+        return (range.intensity * range.area * range.efficiency / 1000);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        fetch('/request')
-            .then(response => response.json())
-            .then(data => {
-                radiationRanges = data.items || [];
-                render();
-            })
-            .catch(() => {
-                radiationRanges = [];
-                render();
-            });
-    });
+    document.addEventListener('DOMContentLoaded', loadRequest);
 </script>
-
 </body>
 </html>

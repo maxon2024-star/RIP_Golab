@@ -3,51 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Диапазоны излучения - Расчет фотоэффекта</title>
+    <title>Диапазоны излучения - Фотоэффект</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-<div class="container">
-    <header>
-        <h1>⚡ Расчет фотоэффекта</h1>
-        <div class="request-summary">
-            <span class="summary-text">В заявке: <span id="request-count">{{.count}}</span> диапазонов</span>
-            <a href="/request" class="request-link">Просмотреть заявку</a>
+<div class="app-container">
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-top">
+            <h1 class="app-title">⚡ Фотоэффект</h1>
+            <div class="header-actions">
+                <a href="/request" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">{{.count}}</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Поиск диапазона излучения...">
+            </div>
         </div>
     </header>
 
-    <main>
-        <h2>Доступные диапазоны электромагнитного излучения</h2>
+    <!-- Main Content -->
+    <main class="services-container">
+        <h2 class="section-title">Диапазоны электромагнитного излучения</h2>
         <div class="services-grid">
             {{range .services}}
-            <div class="service-card" onclick="window.location.href='/service/{{.ID}}'">
-                <img src="{{.ImageURL}}" alt="{{.Name}}">
-                <div class="service-info">
-                    <h3>{{.Name}}</h3>
-                    <p class="wavelength">Длина волны: {{.Wavelength}}</p>
-                    <p class="energy">Энергия фотонов: {{.EnergyRange}}</p>
-                    <p class="frequency">Частота: {{.Frequency}}</p>
-                    <p class="intensity">Интенсивность: {{.Intensity}} Вт/м²</p>
-                    <div class="button-group">
-                        <button class="add-to-request-btn" onclick="addToRequest({{.ID}}, event)">➕ Добавить в заявку</button>
-                        <button class="detail-btn" onclick="viewDetails({{.ID}}, event)">Подробнее</button>
+            <div class="product-card">
+                <div class="product-image-wrapper">
+                    <img src="{{.ImageURL}}" alt="{{.Name}}" class="product-image">
+                    <div class="product-overlay">
+                        <button class="quick-view-btn" onclick="viewDetails({{.ID}})">
+                            <i class="fas fa-eye"></i>
+                            <span>Подробнее</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="product-info">
+                    <h3 class="product-name">{{.Name}}</h3>
+                    <div class="product-specs">
+                        <div class="spec-item">
+                            <i class="fas fa-wave-square"></i>
+                            <span>{{.Wavelength}}</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>{{.EnergyRange}}</span>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <span>{{.Frequency}}</span>
+                        </div>
+                    </div>
+
+                    <div class="product-actions">
+                        <button class="add-btn" id="add-btn-{{.ID}}" onclick="addToRequest({{.ID}}, this)">
+                            <i class="fas fa-plus"></i>
+                            <span>В заявку</span>
+                        </button>
                     </div>
                 </div>
             </div>
             {{end}}
         </div>
     </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Главная</span>
+        </a>
+        <a href="/request" class="nav-item">
+            <i class="fas fa-file-alt"></i>
+            <span>Заявка</span>
+        </a>
+<!--        <a href="#" class="nav-item">-->
+<!--            <i class="fas fa-user"></i>-->
+<!--            <span>Профиль</span>-->
+<!--        </a>-->
+    </nav>
 </div>
 
 <script>
-    async function addToRequest(serviceId, event) {
-        event.stopPropagation();
-
+    async function addToRequest(serviceId, button) {
         const response = await fetch('/add-to-request', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 service_id: serviceId,
                 quantity: 1,
@@ -62,24 +111,31 @@
 
         if (response.ok) {
             const data = await response.json();
-            document.getElementById('request-count').textContent = data.count;
+            document.getElementById('cart-count').textContent = data.count;
 
-            const button = event.target;
-            const originalText = button.textContent;
-            button.textContent = '✓ В заявке';
-            button.style.backgroundColor = '#0ea5e9';
+            // Обновляем кнопку
+            button.classList.add('added');
+            button.innerHTML = '<i class="fas fa-check"></i><span>В заявке</span>';
 
             setTimeout(() => {
-                button.textContent = originalText;
-                button.style.backgroundColor = '';
+                button.classList.remove('added');
+                button.innerHTML = '<i class="fas fa-plus"></i><span>В заявку</span>';
             }, 2000);
         }
     }
 
-    function viewDetails(serviceId, event) {
-        event.stopPropagation();
+    function viewDetails(serviceId) {
         window.location.href = `/service/${serviceId}`;
     }
+
+    // Search functionality
+    document.querySelector('.search-input').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        document.querySelectorAll('.product-card').forEach(card => {
+            const name = card.querySelector('.product-name').textContent.toLowerCase();
+            card.style.display = name.includes(searchTerm) ? 'block' : 'none';
+        });
+    });
 </script>
 </body>
 </html>
