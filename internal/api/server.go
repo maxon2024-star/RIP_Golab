@@ -23,6 +23,6 @@ func StartServer() {
 	r.POST("/update-request", h.UpdateRequest)
 	r.POST("/remove-from-request", h.RemoveFromRequest)
 
-	r.Run()
+	r.Run(":8000")
 	log.Println("Server down")
 }

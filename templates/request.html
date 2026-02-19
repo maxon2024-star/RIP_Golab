@@ -8,11 +8,10 @@
 <body>
 
 <div class="container">
-
     <div class="header">
-        <h1>📋 Заявка №12345</h1>
-        <p>Расчет тока фотоэффекта по диапазонам</p>
-        <a href="/" class="back-btn">← Назад к услугам</a>
+        <h1>📋 Заявка на расчет фотоэффекта</h1>
+        <p>Расчет тока фотоэффекта от распределения излучения по диапазонам</p>
+        <a href="/" class="back-btn">← Назад к диапазонам</a>
     </div>
 
     <div class="stats">
@@ -21,113 +20,97 @@
             <h2 id="count">0</h2>
         </div>
         <div class="stat-card green">
-            <span>Общий ток</span>
+            <span>Общий ток фотоэффекта</span>
             <h2 id="totalCurrent">0 мА</h2>
         </div>
     </div>
 
-    <h2 class="section-title">📦 Состав заявки</h2>
+    <h2 class="section-title">📦 Состав заявки на эксперимент</h2>
 
     <div id="cart"></div>
 
     <div class="total-box">
-        <h3>Общий ток фотоэффекта:</h3>
+        <h3>Суммарный ток фотоэлектронов:</h3>
         <div id="finalTotal">0 мА</div>
         <button class="submit-btn">📤 Отправить расчет</button>
     </div>
-
 </div>
 
 <script>
-    let items = [
-        {
-            id: 1,
-            name: "Видимый свет",
-            current: 12.5,
-            color: "#8b5cf6",
-            intensity: 100,
-            area: 10,
-            workFunction: 2.3,
-            efficiency: 18,
-            comment: "",
-            order: 1,
-            isMain: false
-        },
-        {
-            id: 2,
-            name: "УФ",
-            current: 8.3,
-            color: "#f59e0b",
-            intensity: 45,
-            area: 10,
-            workFunction: 2.3,
-            efficiency: 18,
-            comment: "",
-            order: 2,
-            isMain: false
-        },
-        {
-            id: 3,
-            name: "Инфракрасное",
-            current: 5.7,
-            color: "#10b981",
-            intensity: 15,
-            area: 10,
-            workFunction: 2.3,
-            efficiency: 18,
-            comment: "",
-            order: 3,
-            isMain: true
+    let radiationRanges = [];
+
+    async function loadRequest() {
+        const response = await fetch('/request');
+        if (response.ok) {
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const itemsData = doc.querySelector('#items-data');
+            if (itemsData) {
+                radiationRanges = JSON.parse(itemsData.textContent);
+                render();
+            }
         }
-    ];
+    }
 
     function render() {
         const cart = document.getElementById("cart");
         cart.innerHTML = "";
 
-        let total = 0;
+        let totalCurrent = 0;
 
-        items.forEach(item => {
-            total += item.current;
+        radiationRanges.forEach(range => {
+            const current = calculatePhotoCurrent(range);
+            range.current = current;
+            totalCurrent += current;
 
             cart.innerHTML += `
-                <div class="card" style="border-color:${item.color}">
-                    <div class="card-header" style="background:${item.color}">
-                        <h3>${item.name}</h3>
-                        <button class="remove-btn" onclick="removeItem(${item.id})">×</button>
+                <div class="card" style="border-color:${range.color}">
+                    <div class="card-header" style="background:${range.color}">
+                        <h3>${range.name}</h3>
+                        <button class="remove-btn" onclick="removeRange(${range.service_id})">×</button>
                     </div>
                     <div class="card-body">
                         <div class="controls-grid">
                             <div class="control-group">
-                                <label>Интенсивность (Вт/м²)</label>
-                                <input type="number" value="${item.intensity}" min="0" step="0.1"
-                                       onchange="updateItem(${item.id}, 'intensity', this.value)">
+                                <label>Частота излучения</label>
+                                <input type="text" value="${range.frequency}" disabled>
                             </div>
                             <div class="control-group">
-                                <label>Площадь (см²)</label>
-                                <input type="number" value="${item.area}" min="0.1" step="0.1"
-                                       onchange="updateItem(${item.id}, 'area', this.value)">
+                                <label>Энергия фотонов (эВ)</label>
+                                <input type="text" value="${range.energy_range}" disabled>
+                            </div>
+                            <div class="control-group">
+                                <label>Интенсивность потока (Вт/м²)</label>
+                                <input type="number" value="${range.intensity}" min="0" step="0.1"
+                                       onchange="updateRange(${range.service_id}, 'intensity', this.value)">
+                            </div>
+                            <div class="control-group">
+                                <label>Площадь катода (см²)</label>
+                                <input type="number" value="${range.area}" min="0.1" step="0.1"
+                                       onchange="updateRange(${range.service_id}, 'area', this.value)">
                             </div>
                             <div class="control-group">
                                 <label>Работа выхода (эВ)</label>
-                                <input type="number" value="${item.workFunction}" min="0.1" step="0.1"
-                                       onchange="updateItem(${item.id}, 'workFunction', this.value)">
+                                <input type="number" value="${range.work_function}" min="0.1" step="0.1"
+                                       onchange="updateRange(${range.service_id}, 'work_function', this.value)">
                             </div>
                             <div class="control-group">
-                                <label>КПД (%)</label>
-                                <input type="number" value="${item.efficiency}" min="0" max="100" step="0.1"
-                                       onchange="updateItem(${item.id}, 'efficiency', this.value)">
+                                <label>Квантовая эффективность (%)</label>
+                                <input type="number" value="${range.efficiency}" min="0" max="100" step="0.1"
+                                       onchange="updateRange(${range.service_id}, 'efficiency', this.value)">
                             </div>
                             <div class="control-group">
-                                <label>Комментарий</label>
-                                <input type="text" value="${item.comment}" placeholder="Доп. параметры..."
-                                       onchange="updateItem(${item.id}, 'comment', this.value)">
+                                <label>Описание эксперимента</label>
+                                <input type="text" value="${range.comment}" placeholder="Параметры опыта..."
+                                       onchange="updateRange(${range.service_id}, 'comment', this.value)">
                             </div>
                         </div>
 
                         <div class="result-section">
                             <div class="result">
-                                Результат: <span class="result-value">${item.current} мА</span>
+                                Ток фотоэффекта: <span class="result-value">${current.toFixed(2)} мА</span>
                             </div>
                         </div>
                     </div>
@@ -135,51 +118,66 @@
             `;
         });
 
-        document.getElementById("count").innerText = items.length;
-        document.getElementById("totalCurrent").innerText = total.toFixed(1) + " мА";
-        document.getElementById("finalTotal").innerText = total.toFixed(1) + " мА";
+        document.getElementById("count").innerText = radiationRanges.length;
+        document.getElementById("totalCurrent").innerText = totalCurrent.toFixed(2) + " мА";
+        document.getElementById("finalTotal").innerText = totalCurrent.toFixed(2) + " мА";
     }
 
-    function removeItem(id) {
-        items = items.filter(i => i.id !== id);
-        render();
-    }
+    async function removeRange(serviceId) {
+        const response = await fetch('/remove-from-request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                service_id: serviceId
+            })
+        });
 
-    function updateItem(id, property, value) {
-        const itemIndex = items.findIndex(i => i.id === id);
-        if (itemIndex !== -1) {
-            items[itemIndex][property] = parseFloat(value) || value;
-            // Пересчитываем ток (в реальном приложении здесь будет вызов API)
-            items[itemIndex].current = recalculateCurrent(items[itemIndex]);
+        if (response.ok) {
+            radiationRanges = radiationRanges.filter(r => r.service_id !== serviceId);
             render();
         }
     }
 
-    function toggleMain(id) {
-        // Снимаем галочку "основной" со всех других элементов
-        items = items.map(item => ({
-            ...item,
-            isMain: item.id === id
-        }));
-        render();
+    async function updateRange(serviceId, property, value) {
+        const rangeIndex = radiationRanges.findIndex(r => r.service_id === serviceId);
+        if (rangeIndex !== -1) {
+            radiationRanges[rangeIndex][property] = parseFloat(value) || value;
+
+            const response = await fetch('/update-request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(radiationRanges[rangeIndex])
+            });
+
+            if (response.ok) {
+                render();
+            }
+        }
     }
 
-    function recalculateCurrent(item) {
-        // Простая модель расчета тока фотоэффекта
-        // I = η * A * P / (e * h * ν)
-        // где η - КПД, A - площадь, P - мощность, e - заряд электрона, h - постоянная Планка, ν - частота
-        // Упрощенная формула для демонстрации: I = (η/100) * A * I0
-        // где I0 - базовая интенсивность (условно привязана к диапазону)
-
-        // Для видимого света базовый ток ~0.125 мА при 100 Вт/м², 10 см², 18% КПД
-        let baseCurrent = 0.125;
-        if(item.name.includes("УФ")) baseCurrent = 0.083;
-        if(item.name.includes("Инфра")) baseCurrent = 0.057;
-
-        return (baseCurrent * item.intensity / 100 * item.area / 10 * item.efficiency / 18).toFixed(2);
+    function calculatePhotoCurrent(range) {
+        // Формула тока фотоэффекта: I = η * e * P / (h * ν)
+        // Упрощенная модель для демонстрации
+        const baseCurrent = range.intensity * range.area * range.efficiency / 1000;
+        return baseCurrent;
     }
 
-    render();
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/request')
+            .then(response => response.json())
+            .then(data => {
+                radiationRanges = data.items || [];
+                render();
+            })
+            .catch(() => {
+                radiationRanges = [];
+                render();
+            });
+    });
 </script>
 
 </body>

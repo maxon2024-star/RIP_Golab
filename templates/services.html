@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Услуги - Расчет фотоэффекта</title>
+    <title>Диапазоны излучения - Расчет фотоэффекта</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div class="container">
     <header>
-        <h1>Расчет фотоэффекта</h1>
+        <h1>⚡ Расчет фотоэффекта</h1>
         <div class="request-summary">
-            <span class="summary-text">В заявке: <span id="request-count">{{.count}}</span> услуг</span>
+            <span class="summary-text">В заявке: <span id="request-count">{{.count}}</span> диапазонов</span>
             <a href="/request" class="request-link">Просмотреть заявку</a>
         </div>
     </header>
 
     <main>
-        <h2>Доступные диапазоны излучения</h2>
+        <h2>Доступные диапазоны электромагнитного излучения</h2>
         <div class="services-grid">
             {{range .services}}
             <div class="service-card" onclick="window.location.href='/service/{{.ID}}'">
@@ -25,7 +25,8 @@
                 <div class="service-info">
                     <h3>{{.Name}}</h3>
                     <p class="wavelength">Длина волны: {{.Wavelength}}</p>
-                    <p class="energy">Энергия: {{.EnergyRange}}</p>
+                    <p class="energy">Энергия фотонов: {{.EnergyRange}}</p>
+                    <p class="frequency">Частота: {{.Frequency}}</p>
                     <p class="intensity">Интенсивность: {{.Intensity}} Вт/м²</p>
                     <div class="button-group">
                         <button class="add-to-request-btn" onclick="addToRequest({{.ID}}, event)">➕ Добавить в заявку</button>
@@ -63,11 +64,10 @@
             const data = await response.json();
             document.getElementById('request-count').textContent = data.count;
 
-            // Показываем визуальный индикатор добавления
             const button = event.target;
             const originalText = button.textContent;
             button.textContent = '✓ В заявке';
-            button.style.backgroundColor = '#10b981';
+            button.style.backgroundColor = '#0ea5e9';
 
             setTimeout(() => {
                 button.textContent = originalText;
