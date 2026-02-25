@@ -1,0 +1,6 @@
+.env
+config/config.toml
+*.exe
+tmp/
+vendor/
+.DS_Store
