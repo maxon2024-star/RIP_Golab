@@ -81,7 +81,7 @@ func (r *Repository) GetRequestItemsWithRadiationByUser(userID uint, status stri
 		return items, err
 	}
 
-	// ✅ Рассчитываем ток, если он не сохранён (логика осталась)
+	// Рассчитываем ток, если он не сохранён
 	for i := range items {
 		if items[i].CalculatedCurrent == 0 {
 			// Берем интенсивность либо из item, либо из загруженного Radiation

@@ -72,10 +72,16 @@
                 <span>Суммарный ток фотоэлектронов:</span>
                 <span class="total-value" id="final-total">0 мА</span>
             </div>
-            <button class="submit-btn" onclick="submitRequest()">
-                <i class="fas fa-paper-plane"></i>
-                <span>Отправить расчет</span>
-            </button>
+            <div class="status-actions">
+                <button class="status-btn submit" onclick="submitRequest()">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Отправить расчет</span>
+                </button>
+                <button class="status-btn delete" onclick="deleteRequest()">
+                    <i class="fas fa-trash"></i>
+                    <span>Удалить заявку</span>
+                </button>
+            </div>
         </div>
     </main>
 
@@ -298,7 +304,6 @@ onchange="updateRange(${range.ID || range.id}, ${range.RequestID || range.reques
 
         if(response.ok) {
             alert('Заявка отправлена! Создан новый черновик.');
-// ✅ Очищаем локальные данные и перезагружаем
             radiationRanges = [];
             currentRequestId = 0;
             location.reload();
@@ -310,6 +315,24 @@ onchange="updateRange(${range.ID || range.id}, ${range.RequestID || range.reques
     async function logout() {
         await fetch('/logout', {method: 'POST'});
         location.reload();
+    }
+
+    async function deleteRequest() {
+        if(!confirm("Вы уверены? Заявка будет помечена как удалённая")) return;
+        const reqId = currentRequestId > 0 ? currentRequestId : parseInt(document.getElementById('request-id').textContent);
+        const response = await fetch('/delete-request', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({request_id: reqId})
+        });
+        if(response.ok) {
+            alert('Заявка удалена!');
+            radiationRanges = [];
+            currentRequestId = 0;
+            location.reload();
+        } else {
+            alert('Ошибка удаления');
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {

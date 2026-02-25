@@ -2,8 +2,8 @@ package ds
 
 type RequestItem struct {
 	ID                uint    `gorm:"primaryKey" json:"id"`
-	RequestID         uint    `gorm:"not null;index;uniqueIndex:idx_request_radiation" json:"request_id"`
-	RadiationID       uint    `gorm:"not null;index;uniqueIndex:idx_request_radiation" json:"radiation_id"`
+	RequestID         uint    `gorm:"not null;index;uniqueIndex:idx_request_radiation;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"request_id"`
+	RadiationID       uint    `gorm:"not null;index;uniqueIndex:idx_request_radiation;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"radiation_id"`
 	Area              float64 `gorm:"type:decimal(10,2);default:10" json:"area"`
 	WorkFunction      float64 `gorm:"type:decimal(5,2);default:2.3" json:"work_function"`
 	Efficiency        float64 `gorm:"type:decimal(5,2);default:18" json:"efficiency"`

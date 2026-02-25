@@ -1679,3 +1679,43 @@ body {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* Status Actions */
+.status-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.status-btn {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.status-btn.submit {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    color: white;
+}
+
+.status-btn.delete {
+    background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+    color: white;
+}
+
+.status-btn.delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+}

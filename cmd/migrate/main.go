@@ -30,6 +30,7 @@ func main() {
 	}
 	log.Println("✅ Миграции выполнены!")
 
+	db.Exec("ALTER TABLE request_items ADD CONSTRAINT uk_request_radiation UNIQUE (request_id, radiation_id)")
 	// Заполнение тестовыми данными
 	SeedTestData(db)
 }
