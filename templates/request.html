@@ -3,341 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Заявка на расчет - Фотоэффект</title>
+    <title>Заявка #{{.request.ID}} - Фотоэффект</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <div class="app-container">
     <header class="main-header">
-        <div class="header-top">
-            <h1 class="app-title">⚡ Фотоэффект</h1>
-            <div class="header-actions">
-                {{if .logged_in}}
-                <span class="user-info">👤 {{.login}}</span>
-                <button class="logout-btn" onclick="logout()">Выйти</button>
-                {{else}}
-                <button class="login-btn" onclick="window.location.href='/'">Войти</button>
-                {{end}}
-                <a href="/" class="cart-icon">
-                    <i class="fas fa-home"></i>
-                </a>
-            </div>
-        </div>
+        <h1 class="app-title">⚡ Фотоэффект</h1>
     </header>
 
-    <main class="request-container">
-        <div class="request-info-card">
-            <div class="info-header">
-                <i class="fas fa-clipboard-list"></i>
-                <h2>Параметры заявки на эксперимент</h2>
-            </div>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Номер заявки</span>
-                    <span class="info-value">#<span id="request-id">0</span></span>
+    <div class="sub-header">
+        <a href="/" class="btn-details">⬅ На главную</a>
+        <div class="cart-icon" title="Заявка">
+            🛒<span class="cart-count">{{.count}}</span>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <h2 class="section-title">Оформление заявки #{{.request.ID}} (Статус: {{.request.Status}})</h2>
+
+        {{if .request.Items}}
+        <div class="cart-table-wrapper">
+            <div class="cart-table-inner">
+                <!-- Заголовок таблицы: 7 колонок -->
+                <div class="table-header">
+                    <div>Фото</div>
+                    <div>Диапазон</div>
+                    <div>Частота (Гц)</div>
+                    <div>Площадь (см²)</div>
+                    <div>КПД (%)</div>
+                    <div>Ток (мА)</div>
+                    <div>Действия</div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Диапазонов излучения</span>
-                    <span class="info-value" id="ranges-count">0</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Общий ток фотоэффекта</span>
-                    <span class="info-value total" id="total-current">0 мА</span>
+
+                <div class="items-container">
+                    {{range .request.Items}}
+                    <div class="item-card">
+                        <!-- Строка товара: 7 колонок -->
+                        <div class="item-grid">
+                            <div><img src="{{.Radiation.ImageURL}}" class="item-image" onerror="this.src='https://via.placeholder.com/60'"></div>
+
+                            <div>
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">{{.Radiation.Name}}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">⚡ {{.Radiation.EnergyRange}}</div>
+                            </div>
+
+                            <div>
+                                <input type="number" name="frequency" value="{{.Frequency}}" step="any" form="update-form-{{.ID}}" class="table-input" required>
+                            </div>
+
+                            <div>
+                                <input type="number" name="area" value="{{.Area}}" step="0.1" form="update-form-{{.ID}}" class="table-input" required>
+                            </div>
+
+                            <div>
+                                <input type="number" name="efficiency" value="{{.Efficiency}}" step="0.1" form="update-form-{{.ID}}" class="table-input" required>
+                            </div>
+
+                            <div class="result-value">
+                                {{.CalculatedCurrent}}
+                            </div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <form id="update-form-{{.ID}}" action="/update-item" method="POST" style="margin: 0;">
+                                    <input type="hidden" name="item_id" value="{{.ID}}">
+                                    <input type="hidden" name="calc_id" value="{{$.request.ID}}">
+                                    <button type="submit" class="electric-btn-sm" title="Сохранить изменения">🔄</button>
+                                </form>
+
+                                <form action="/delete-item" method="POST" style="margin: 0;">
+                                    <input type="hidden" name="item_id" value="{{.ID}}">
+                                    <input type="hidden" name="calc_id" value="{{$.request.ID}}">
+                                    <button type="submit" class="remove-btn" title="Удалить диапазон">✖</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
                 </div>
             </div>
         </div>
 
-        <div class="table-header-card">
-            <div class="table-header">
-                <div class="col-image">Изображение</div>
-                <div class="col-name">Диапазон излучения</div>
-                <div class="col-specs">Характеристики</div>
-                <div class="col-params">Параметры эксперимента</div>
-                <div class="col-result">Ток фотоэффекта</div>
-                <div class="col-action"></div>
-            </div>
+        <div class="total-card">
+            <h2 style="margin: 0;">Общий ток фотоэффекта: <span style="font-size: 1.5em;">{{.totalCurrent}} мА</span></h2>
         </div>
 
-        <div id="cart" class="items-container">
-            <div class="empty-cart" id="emptyCart" style="display:none;">
-                <i class="fas fa-shopping-cart"></i>
-                <p>Заявка пуста</p>
-                <a href="/" class="browse-btn">Добавить диапазоны</a>
-            </div>
+        <div class="status-actions">
+            <form action="/delete-calculation/{{.request.ID}}" method="POST" style="flex: 1;">
+                <button type="submit" class="status-btn delete" style="width: 100%;">🗑 Удалить всю заявку</button>
+            </form>
+
+            <form action="/status-calculation" method="POST" style="flex: 1;">
+                <input type="hidden" name="calc_id" value="{{.request.ID}}">
+                <button type="submit" class="status-btn submit" style="width: 100%;">✅ Отправить на модерацию</button>
+            </form>
         </div>
 
-        <div class="total-card" id="totalCard" style="display:none;">
-            <div class="total-row">
-                <span>Суммарный ток фотоэлектронов:</span>
-                <span class="total-value" id="final-total">0 мА</span>
-            </div>
-            <div class="status-actions">
-                <button class="status-btn submit" onclick="submitRequest()">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>Отправить расчет</span>
-                </button>
-                <button class="status-btn delete" onclick="deleteRequest()">
-                    <i class="fas fa-trash"></i>
-                    <span>Удалить заявку</span>
-                </button>
-            </div>
+        {{else}}
+        <div class="empty-cart">
+            <i>🛒</i>
+            <p>Ваша заявка пока пуста. Добавьте диапазоны излучения из каталога.</p>
+            <a href="/" class="electric-btn">Перейти в каталог</a>
         </div>
+        {{end}}
     </main>
-
-    <nav class="bottom-nav">
-        <a href="/" class="nav-item">
-            <i class="fas fa-home"></i>
-            <span>Главная</span>
-        </a>
-        <a href="/request" class="nav-item active">
-            <i class="fas fa-file-alt"></i>
-            <span>Заявка</span>
-        </a>
-    </nav>
 </div>
-
-<script>
-    let radiationRanges = [];
-    let currentRequestId = 0;
-
-    async function loadRequest() {
-        const response = await fetch('/request?format=json');
-        if (response.ok) {
-            const data = await response.json();
-            radiationRanges = data.items || [];
-            currentRequestId = data.request_id || 0;
-// ✅ Устанавливаем номер заявки
-            document.getElementById('request-id').textContent = currentRequestId;
-            render();
-        }
-    }
-
-    function render() {
-        const cart = document.getElementById("cart");
-        const emptyCart = document.getElementById("emptyCart");
-        const totalCard = document.getElementById("totalCard");
-        cart.innerHTML = "";
-        let totalCurrent = 0;
-
-        if (radiationRanges.length === 0) {
-            emptyCart.style.display = "block";
-            totalCard.style.display = "none";
-            document.getElementById("ranges-count").textContent = "0";
-            document.getElementById("total-current").textContent = "0 мА";
-            document.getElementById("final-total").textContent = "0 мА";
-            return;
-        }
-
-        emptyCart.style.display = "none";
-        totalCard.style.display = "block";
-
-        radiationRanges.forEach(range => {
-            const rad = range.Radiation || range.radiation || {};
-
-// ✅ Получаем частоту для расчёта (из Radiation или дефолтное значение)
-            const frequencyStr = rad.Frequency || rad.frequency || '0';
-            const freqValue = parseFrequency(frequencyStr); // Парсим строку типа "3 кГц - 300 ГГц"
-
-            const intensity = range.Intensity || range.intensity || rad.Intensity || rad.intensity || 100;
-            const area = (range.Area || range.area || 0) > 0 ? (range.Area || range.area) : 10;
-            const workFunction = (range.WorkFunction || range.work_function || 0) > 0 ? (range.WorkFunction || range.work_function) : 2.3;
-            const efficiency = (range.Efficiency || range.efficiency || 0) > 0 ? (range.Efficiency || range.efficiency) : 18;
-            const comment = range.Comment || range.comment || '';
-
-// ✅ Расчёт тока с учётом частоты (I = Intensity × Area × Efficiency × FrequencyFactor / 1000)
-            const frequencyFactor = freqValue > 0 ? Math.min(freqValue / 1e14, 10) : 1; // Нормализация частоты
-            const current = (intensity * area * efficiency * frequencyFactor) / 1000;
-            totalCurrent += current;
-
-            cart.innerHTML += `
-<div class="item-card">
-<div class="item-grid">
-<div class="col-image">
-<img src="${rad.ImageURL || rad.image_url || 'https://via.placeholder.com/80'}"
-alt="${rad.Name || rad.name || 'Диапазон'}"
-class="item-image"
-onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
-</div>
-<div class="col-name">
-<h4>${rad.Name || rad.name || 'Диапазон #' + (range.RadiationID || range.radiation_id)}</h4>
-<span class="item-id">#${range.RadiationID || range.radiation_id}</span>
-</div>
-<div class="col-specs">
-<div class="mini-spec">
-<i class="fas fa-bolt"></i>
-<span>${rad.EnergyRange || rad.energy_range || '-'}</span>
-</div>
-<div class="mini-spec">
-<i class="fas fa-wave-square"></i>
-<span>${rad.Wavelength || rad.wavelength || '-'}</span>
-</div>
-<div class="mini-spec">
-<i class="fas fa-broadcast-tower"></i>
-<span>${rad.Frequency || rad.frequency || '-'}</span>
-</div>
-</div>
-<div class="col-params">
-<div class="param-input">
-<label>Интенсивность (Вт/м²)</label>
-<input type="number" value="${intensity}" min="0" step="0.1"
-onchange="updateRange(${range.ID || range.id}, ${range.RequestID || range.request_id}, ${range.RadiationID || range.radiation_id}, 'intensity', this.value)">
-</div>
-<div class="param-input">
-<label>Площадь катода (см²)</label>
-<input type="number" value="${area}" min="0.1" step="0.1"
-onchange="updateRange(${range.ID || range.id}, ${range.RequestID || range.request_id}, ${range.RadiationID || range.radiation_id}, 'area', this.value)">
-</div>
-<div class="param-input">
-<label>Работа выхода (эВ)</label>
-<input type="number" value="${workFunction}" min="0.1" step="0.1"
-onchange="updateRange(${range.ID || range.id}, ${range.RequestID || range.request_id}, ${range.RadiationID || range.radiation_id}, 'work_function', this.value)">
-</div>
-<div class="param-input">
-<label>Эффективность (%)</label>
-<input type="number" value="${efficiency}" min="0" max="100" step="0.1"
-onchange="updateRange(${range.ID || range.id}, ${range.RequestID || range.request_id}, ${range.RadiationID || range.radiation_id}, 'efficiency', this.value)">
-</div>
-<div class="param-input full-width">
-<label>Описание эксперимента</label>
-<input type="text" value="${comment}" placeholder="Параметры опыта."
-onchange="updateRange(${range.ID || range.id}, ${range.RequestID || range.request_id}, ${range.RadiationID || range.radiation_id}, 'comment', this.value)">
-</div>
-</div>
-<div class="col-result">
-<span class="result-value">${current.toFixed(2)} мА</span>
-</div>
-<div class="col-action">
-<button class="remove-btn" onclick="removeRange(${range.RadiationID || range.radiation_id})">
-<i class="fas fa-trash"></i>
-</button>
-</div>
-</div>
-</div>
-`;
-        });
-
-        document.getElementById("ranges-count").textContent = radiationRanges.length;
-        document.getElementById("total-current").textContent = totalCurrent.toFixed(2) + " мА";
-        document.getElementById("final-total").textContent = totalCurrent.toFixed(2) + " мА";
-    }
-
-    // ✅ Функция парсинга частоты из строки типа "3 кГц - 300 ГГц"
-    function parseFrequency(freqStr) {
-        if (!freqStr) return 0;
-        const match = freqStr.match(/([\d.]+)\s*(кГц|МГц|ГГц|ТГц|ПГц)/i);
-        if (!match) return 0;
-        const value = parseFloat(match[1]);
-        const unit = match[2].toLowerCase();
-        const multipliers = {
-            'кГц': 1e3,
-            'мгц': 1e6,
-            'ггц': 1e9,
-            'тгц': 1e12,
-            'пгц': 1e15
-        };
-        return value * (multipliers[unit] || 1);
-    }
-
-    async function updateRange(itemId, requestId, radiationId, property, value) {
-        const num = Number(value);
-        const payloadValue = !isNaN(num) ? num : value;
-        const body = {
-            id: itemId,
-            request_id: requestId,
-            radiation_id: radiationId
-        };
-        body[property] = payloadValue;
-
-        const response = await fetch('/update-request', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(body)
-        });
-        if (response.ok) {
-            for (let i = 0; i < radiationRanges.length; i++) {
-                const r = radiationRanges[i];
-                const idMatch = (r.ID || r.id) === itemId;
-                const radiationMatch = (r.RadiationID || r.radiation_id) === radiationId;
-                if (idMatch || radiationMatch) {
-                    r[property] = payloadValue;
-                    const camel = property.split('_').map((w, idx) => idx === 0 ? w : w[0].toUpperCase() + w.slice(1)).join('');
-                    r[camel] = payloadValue;
-                    const intensity = r.Intensity || r.intensity || (r.Radiation && (r.Radiation.Intensity || r.Radiation.intensity)) || 0;
-                    const area = r.Area || r.area || 10;
-                    const efficiency = r.Efficiency || r.efficiency || 18;
-                    const freqStr = r.Radiation ? (r.Radiation.Frequency || r.Radiation.frequency) : '';
-                    const freqValue = parseFrequency(freqStr);
-                    const frequencyFactor = freqValue > 0 ? Math.min(freqValue / 1e14, 10) : 1;
-                    r.CalculatedCurrent = intensity * area * efficiency * frequencyFactor / 1000;
-                    break;
-                }
-            }
-            render();
-        } else {
-            const data = await response.json();
-            alert('Ошибка: ' + (data.error || 'Не удалось обновить'));
-        }
-    }
-
-    async function removeRange(radiationId) {
-        const response = await fetch('/remove-from-request', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({radiation_id: radiationId})
-        });
-        if (response.ok) {
-            radiationRanges = radiationRanges.filter(r => (r.RadiationID || r.radiation_id) !== radiationId);
-            render();
-        }
-    }
-
-    async function submitRequest() {
-        if(!confirm("Отправить заявку на проверку модератору?")) return;
-
-        const reqId = currentRequestId > 0 ? currentRequestId : parseInt(document.getElementById('request-id').textContent);
-        const response = await fetch('/request/status', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({request_id: reqId, status: 'сформирован'})
-        });
-
-        if(response.ok) {
-            alert('Заявка отправлена! Создан новый черновик.');
-            radiationRanges = [];
-            currentRequestId = 0;
-            location.reload();
-        } else {
-            alert('Ошибка отправки');
-        }
-    }
-
-    async function logout() {
-        await fetch('/logout', {method: 'POST'});
-        location.reload();
-    }
-
-    async function deleteRequest() {
-        if(!confirm("Вы уверены? Заявка будет помечена как удалённая")) return;
-        const reqId = currentRequestId > 0 ? currentRequestId : parseInt(document.getElementById('request-id').textContent);
-        const response = await fetch('/delete-request', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({request_id: reqId})
-        });
-        if(response.ok) {
-            alert('Заявка удалена!');
-            radiationRanges = [];
-            currentRequestId = 0;
-            location.reload();
-        } else {
-            alert('Ошибка удаления');
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        loadRequest();
-    });
-</script>
 </body>
 </html>

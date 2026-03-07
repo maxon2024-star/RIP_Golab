@@ -5,242 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Диапазоны излучения - Фотоэффект</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <div class="app-container">
-    <!-- Header -->
     <header class="main-header">
-        <div class="header-top">
-            <h1 class="app-title">⚡ Фотоэффект</h1>
-            <div class="header-actions">
-                {{if .logged_in}}
-                <span class="user-info">👤 {{.login}}</span>
-                <button class="logout-btn" onclick="logout()">Выйти</button>
-                {{else}}
-                <button class="login-btn" onclick="showLoginModal()">Войти</button>
-                <button class="register-btn" onclick="showRegisterModal()">Регистрация</button>
-                {{end}}
-                <a href="/request" class="cart-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cart-count">{{.count}}</span>
-                </a>
-            </div>
-        </div>
-        <!-- Search Bar -->
-        <div class="search-container">
-            <div class="search-box">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Поиск диапазона излучения...">
-            </div>
-        </div>
+        <h1 class="app-title">⚡ Фотоэффект</h1>
     </header>
 
-    <!-- Main Content -->
-    <main class="services-container">
+    <div class="sub-header">
+        <form action="/" method="GET" class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="search" placeholder="Поиск диапазонов излучения..." value="{{.search}}" class="search-input">
+        </form>
+
+        {{if gt .draft_id 0}}
+        <a href="/radiation_calculation/{{.draft_id}}" class="cart-icon" title="Заявка">
+            🛒<span class="cart-count">{{.count}}</span>
+        </a>
+        {{else}}
+        <a href="#" class="cart-icon" title="Корзина пуста">🛒</a>
+        {{end}}
+    </div>
+
+    <main class="main-content">
         <h2 class="section-title">Диапазоны электромагнитного излучения</h2>
+
         <div class="services-grid">
             {{range .services}}
-            <div class="product-card">
-                <div class="product-image-wrapper">
-                    <img src="{{.ImageURL}}" alt="{{.Name}}" class="product-image" onerror="this.src='https://via.placeholder.com/280?text=No+Image'">
-                    <div class="product-overlay">
-                        <button class="quick-view-btn" onclick="viewDetails({{.ID}})">
-                            <i class="fas fa-eye"></i>
-                            <span>Подробнее</span>
-                        </button>
+            <div class="service-card">
+                <div class="card-image-wrapper">
+                    <img src="{{.ImageURL}}" alt="{{.Name}}" class="card-image" onerror="this.src='https://via.placeholder.com/400x250?text=No+Image'">
+                    <div class="badge-energy">{{.EnergyRange}}</div>
+                    <div class="card-overlay">
+                        <a href="/service/{{.ID}}" class="btn-details">👁️ Подробнее</a>
                     </div>
                 </div>
-                <div class="product-info">
-                    <h3 class="product-name">{{.Name}}</h3>
-                    <div class="product-specs">
+
+                <div class="card-info">
+                    <h3 class="card-title">{{.Name}}</h3>
+                    <div class="card-specs">
                         <div class="spec-item">
-                            <i class="fas fa-wave-square"></i>
-                            <span>{{.Wavelength}}</span>
-                        </div>
-                        <div class="spec-item">
-                            <i class="fas fa-bolt"></i>
-                            <span>{{.EnergyRange}}</span>
-                        </div>
-                        <div class="spec-item">
-                            <i class="fas fa-broadcast-tower"></i>
+                            <span class="spec-icon" style="color:var(--primary)">⚡</span>
                             <span>{{.Frequency}}</span>
                         </div>
                     </div>
-                    <div class="product-actions">
-                        <button class="add-btn" id="add-btn-{{.ID}}" data-intensity="{{.Intensity}}" onclick="addToRequest({{.ID}}, this)">
-                            <i class="fas fa-plus"></i>
-                            <span>В заявку</span>
-                        </button>
-                    </div>
+
+                    <form action="/add-to-calculation" method="POST">
+                        <input type="hidden" name="service_id" value="{{.ID}}">
+                        <button type="submit" class="btn-add">➕ В заявку</button>
+                    </form>
                 </div>
             </div>
             {{end}}
         </div>
     </main>
-
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <a href="/" class="nav-item active">
-            <i class="fas fa-home"></i>
-            <span>Главная</span>
-        </a>
-        <a href="/request" class="nav-item">
-            <i class="fas fa-file-alt"></i>
-            <span>Заявка</span>
-        </a>
-    </nav>
 </div>
-
-<!-- ✅ МОДАЛЬНОЕ ОКНО ВХОДА -->
-<div id="loginModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('loginModal')">&times;</span>
-        <h2>Вход</h2>
-        <input type="text" id="loginUsername" placeholder="Логин">
-        <input type="password" id="loginPassword" placeholder="Пароль">
-        <button onclick="login()">Войти</button>
-        <p class="modal-error" id="loginError"></p>
-    </div>
-</div>
-
-<!-- ✅ МОДАЛЬНОЕ ОКНО РЕГИСТРАЦИИ -->
-<div id="registerModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('registerModal')">&times;</span>
-        <h2>Регистрация</h2>
-        <input type="text" id="regUsername" placeholder="Логин">
-        <input type="password" id="regPassword" placeholder="Пароль">
-        <button onclick="register()">Зарегистрироваться</button>
-        <p class="modal-error" id="regError"></p>
-    </div>
-</div>
-
-<script>
-    // --- Функции управления модальными окнами ---
-    function showLoginModal() {
-        document.getElementById('loginModal').style.display = 'flex';
-    }
-
-    function showRegisterModal() {
-        document.getElementById('registerModal').style.display = 'flex';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-        // Очищаем ошибки при закрытии
-        if(modalId === 'loginModal') document.getElementById('loginError').textContent = '';
-        if(modalId === 'registerModal') document.getElementById('regError').textContent = '';
-    }
-
-    // Закрытие по клику вне окна
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
-        }
-    }
-
-    // --- Авторизация ---
-    async function login() {
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
-
-        try {
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({login: username, password: password})
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // ✅ Успешный вход - перезагружаем страницу для обновления шапки
-                location.reload();
-            } else {
-                document.getElementById('loginError').textContent = data.error || 'Ошибка входа';
-            }
-        } catch (e) {
-            document.getElementById('loginError').textContent = 'Ошибка соединения';
-        }
-    }
-
-    async function register() {
-        const username = document.getElementById('regUsername').value;
-        const password = document.getElementById('regPassword').value;
-
-        try {
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({login: username, password: password})
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // ✅ Успешная регистрация - перезагружаем страницу
-                location.reload();
-            } else {
-                document.getElementById('regError').textContent = data.error || 'Ошибка регистрации';
-            }
-        } catch (e) {
-            document.getElementById('regError').textContent = 'Ошибка соединения';
-        }
-    }
-
-    async function logout() {
-        await fetch('/logout', {method: 'POST'});
-        // ✅ При выходе корзина "очищается" визуально, так как счетчик привязан к пользователю
-        location.reload();
-    }
-
-    // --- Корзина ---
-    async function addToRequest(serviceId, button) {
-        const intensity = parseFloat(button.dataset.intensity) || 0;
-        const response = await fetch('/add-to-request', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                service_id: serviceId,
-                area: 10,
-                work_function: 2.3,
-                efficiency: 18,
-                intensity: intensity,
-                comment: '',
-                order: 1
-            })
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            document.getElementById('cart-count').textContent = data.count;
-
-            // Анимация кнопки
-            button.classList.add('added');
-            button.innerHTML = '<i class="fas fa-check"></i><span>В заявке</span>';
-            setTimeout(() => {
-                button.classList.remove('added');
-                button.innerHTML = '<i class="fas fa-plus"></i><span>В заявку</span>';
-            }, 2000);
-        } else {
-            const data = await response.json();
-            alert(data.error || 'Ошибка добавления');
-        }
-    }
-
-    function viewDetails(serviceId) {
-        window.location.href = `/service/${serviceId}`;
-    }
-
-    // Поиск
-    document.querySelector('.search-input').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        document.querySelectorAll('.product-card').forEach(card => {
-            const name = card.querySelector('.product-name').textContent.toLowerCase();
-            card.style.display = name.includes(searchTerm) ? 'block' : 'none';
-        });
-    });
-</script>
 </body>
 </html>

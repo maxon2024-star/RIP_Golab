@@ -5,186 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.service.Name}} - Фотоэффект</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 <div class="app-container">
     <header class="main-header">
-        <div class="header-top">
-            <h1 class="app-title">⚡ Фотоэффект</h1>
-            <div class="header-actions">
-                <a href="/request" class="cart-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count" id="cart-count">{{.count}}</span>
-                </a>
-            </div>
-        </div>
+        <h1 class="app-title">⚡ Фотоэффект</h1>
     </header>
 
-    <main class="detail-container-vibes">
-        <div class="vibes-layout">
-            <div class="vibes-video-section">
-                <div class="video-wrapper-vertical">
-                    <div id="videoLoader" class="video-loader">
-                        <div class="spinner"></div>
-                    </div>
-                    <div class="video-container-vertical">
-                        <video id="serviceVideo" autoplay muted loop playsinline preload="auto">
-                            <source src="{{.videoURL}}" type="video/mp4">
-                            Ваш браузер не поддерживает видео.
-                        </video>
-                    </div>
-                    <div class="vibes-actions">
-                        <a href="/request" class="action-btn">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>{{.count}}</span>
-                        </a>
+    <div class="sub-header">
+        <a href="/" class="btn-details">⬅ Назад к списку</a>
+
+        {{if gt .draft_id 0}}
+        <a href="/radiation_calculation/{{.draft_id}}" class="cart-icon" title="Заявка">
+            🛒<span class="cart-count">{{.count}}</span>
+        </a>
+        {{else}}
+        <a href="#" class="cart-icon" title="Корзина пуста">🛒</a>
+        {{end}}
+    </div>
+
+    <main class="main-content">
+        <div class="detail-container-vibes">
+            <div class="vibes-layout">
+
+                <div class="vibes-video-section">
+                    <video autoplay loop muted playsinline class="tiktok-video">
+                        <source src="{{.videoURL}}" type="video/mp4">
+                    </video>
+                    <div class="vibes-video-overlay">
+                        <h2 style="font-size:1.8rem; margin-bottom:8px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">{{.service.Name}}</h2>
+                        <p style="font-size:0.9rem; margin-bottom:8px;">{{.service.Description}}</p>
+                        <p style="font-size:0.8rem; opacity:0.8;">Энергия: {{.service.EnergyRange}} | Частота: {{.service.Frequency}}</p>
                     </div>
                 </div>
-            </div>
 
-            <div class="vibes-info-section">
-                <div class="vibes-content">
-                    <h2 class="detail-title">{{.service.Name}}</h2>
-                    <p class="detail-desc">{{.service.Description}}</p>
+                <div class="vibes-form-section">
+                    <h2 style="color:var(--primary); margin-bottom:20px;">Параметры эксперимента</h2>
+                    <form action="/add-to-calculation" method="POST">
+                        <input type="hidden" name="service_id" value="{{.service.ID}}">
 
-                    <div class="vibes-specs">
-                        <div class="vibes-spec-item">
-                            <i class="fas fa-bolt"></i>
-                            <div>
-                                <span class="spec-label">Энергетический диапазон</span>
-                                <span class="spec-value">{{.service.EnergyRange}}</span>
-                            </div>
+                        <div class="form-field">
+                            <label>Площадь катода (см²)</label>
+                            <input type="number" name="area" value="10" min="0.1" step="0.1" required>
                         </div>
-                        <div class="vibes-spec-item">
-                            <i class="fas fa-broadcast-tower"></i>
-                            <div>
-                                <span class="spec-label">Частота излучения</span>
-                                <span class="spec-value">{{.service.Frequency}}</span>
-                            </div>
-                        </div>
-                        <div class="vibes-spec-item">
-                            <i class="fas fa-wave-square"></i>
-                            <div>
-                                <span class="spec-label">Длина волны</span>
-                                <span class="spec-value">{{.service.Wavelength}}</span>
-                            </div>
-                        </div>
-                        <div class="vibes-spec-item">
-                            <i class="fas fa-sun"></i>
-                            <div>
-                                <span class="spec-label">Интенсивность (по умолчанию)</span>
-                                <span class="spec-value">{{.service.Intensity}} Вт/м²</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="experiment-form">
-                        <h3 class="form-title">
-                            <i class="fas fa-flask"></i>
-                            Параметры эксперимента
-                        </h3>
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label>Площадь катода (см²)</label>
-                                <input type="number" id="area" value="10" min="0.1" step="0.1">
-                            </div>
-                            <div class="form-field">
-                                <label>Работа выхода (эВ)</label>
-                                <input type="number" id="workFunction" value="2.3" min="0.1" step="0.1">
-                            </div>
-                            <div class="form-field">
-                                <label>Квантовая эффективность (%)</label>
-                                <input type="number" id="efficiency" value="18" min="0" max="100" step="0.1">
-                            </div>
-                            <!-- Добавлено: поле для интенсивности (можно менять) -->
-                            <div class="form-field">
-                                <label>Интенсивность (Вт/м²)</label>
-                                <input type="number" id="intensity" value="{{.service.Intensity}}" min="0" step="0.1">
-                            </div>
-                            <div class="form-field full-width">
-                                <label>Описание эксперимента</label>
-                                <input type="text" id="comment" placeholder="Параметры опыта.">
-                            </div>
+                        <div class="form-field">
+                            <label>Квантовая эффективность (%)</label>
+                            <input type="number" name="efficiency" value="18" min="0" max="100" step="0.1" required>
                         </div>
-                    </div>
 
-                    <div class="vibes-action-bar">
-                        <button class="add-to-cart-btn" id="addToCartBtn" onclick="addToRequest({{.service.ID}})">
-                            <i class="fas fa-cart-plus"></i>
-                            <span>Добавить диапазон в заявку</span>
-                        </button>
-                    </div>
+                        <div class="form-field">
+                            <label>Частота (Гц)</label>
+                            <input type="number" name="frequency" step="any" placeholder="По умолчанию (из каталога)">
+                        </div>
+
+                        <button type="submit" class="electric-btn" style="margin-top: 15px; width: 100%;">➕ Добавить в заявку</button>
+                    </form>
                 </div>
+
             </div>
         </div>
     </main>
-
-    <nav class="bottom-nav">
-        <a href="/" class="nav-item">
-            <i class="fas fa-home"></i>
-            <span>Главная</span>
-        </a>
-        <a href="/request" class="nav-item">
-            <i class="fas fa-file-alt"></i>
-            <span>Заявка</span>
-        </a>
-    </nav>
 </div>
-
-<script>
-    const video = document.getElementById("serviceVideo");
-    const loader = document.getElementById("videoLoader");
-
-    if (video && loader) {
-        video.addEventListener("loadeddata", function() {
-            loader.style.display = "none";
-            video.style.opacity = "1";
-        });
-        video.addEventListener("error", function() {
-            loader.style.display = "none";
-            document.querySelector('.video-container-vertical').innerHTML =
-                '<div class="no-video"><i class="fas fa-video-slash"></i><p>Видео недоступно</p></div>';
-        });
-    }
-
-    async function addToRequest(serviceId) {
-        const area = parseFloat(document.getElementById('area').value) || 10;
-        const workFunction = parseFloat(document.getElementById('workFunction').value) || 2.3;
-        const efficiency = parseFloat(document.getElementById('efficiency').value) || 18;
-        const intensity = parseFloat(document.getElementById('intensity').value) || 0;
-        const comment = document.getElementById('comment').value || '';
-        const btn = document.getElementById('addToCartBtn');
-
-        const response = await fetch('/add-to-request', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                service_id: serviceId,
-                area: area,
-                work_function: workFunction,
-                efficiency: efficiency,
-                intensity: intensity,
-                comment: comment,
-                order: 1
-            })
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            document.getElementById('cart-count').textContent = data.count;
-
-            btn.classList.add('added');
-            btn.innerHTML = '<i class="fas fa-check"></i><span>Добавлено в заявку</span>';
-            setTimeout(() => {
-                btn.classList.remove('added');
-                btn.innerHTML = '<i class="fas fa-cart-plus"></i><span>Добавить диапазон в заявку</span>';
-            }, 2000);
-        } else {
-            const data = await response.json();
-            alert('Ошибка: ' + (data.error || 'Не удалось добавить'));
-        }
-    }
-</script>
 </body>
 </html>
