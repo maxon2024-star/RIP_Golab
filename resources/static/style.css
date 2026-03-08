@@ -320,15 +320,21 @@ body {
 }
 
 .cart-table-inner {
-    min-width: 950px; /* Увеличено для 7 колонок */
+    min-width: 1200px; /* Увеличено для 9 колонок */
 }
 
-/* НОВАЯ СЕТКА: 7 колонок (Фото | Диапазон | Частота | Площадь | КПД | Ток | Действия) */
+/* ИДЕАЛЬНАЯ СЕТКА (9 колонок): Фото | Имя | Частота | Работа | Площадь | КПД | Ek | Ток | Действия */
 .table-header, .item-grid {
     display: grid;
-    grid-template-columns: 80px 1.5fr 150px 110px 110px 110px 90px;
-    gap: 15px;
+    grid-template-columns: 60px 1.5fr 110px 80px 80px 80px 80px 100px 80px;
+    gap: 8px;
     align-items: center;
+    text-align: center;
+}
+
+/* Выравнивание названия по левому краю */
+.table-header div:nth-child(2), .item-grid div:nth-child(2) {
+    text-align: left;
 }
 
 .table-header {
@@ -370,7 +376,7 @@ body {
     border-radius: 6px;
     background: var(--surface);
     text-align: center;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-primary);
 }
 
@@ -383,6 +389,14 @@ body {
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--success);
+}
+
+/* Красный текст для ошибок физики */
+.error-msg {
+    color: var(--danger);
+    font-size: 0.8rem;
+    font-weight: bold;
+    line-height: 1.2;
 }
 
 /* Кнопки в таблице */
@@ -605,11 +619,23 @@ body {
         flex-direction: column;
     }
 
-    /* Адаптация таблицы под мобильные */
+    /* Адаптация таблицы под мобильные: показываем только главное */
     .table-header, .item-grid {
-        grid-template-columns: 60px 1fr 80px;
+        grid-template-columns: 60px 1fr 70px;
     }
-    .col-frequency, .col-area, .col-efficiency, .col-current {
+    /* Скрываем лишние колонки на мобильных (3-8) */
+    .table-header div:nth-child(3),
+    .table-header div:nth-child(4),
+    .table-header div:nth-child(5),
+    .table-header div:nth-child(6),
+    .table-header div:nth-child(7),
+    .table-header div:nth-child(8),
+    .item-grid div:nth-child(3),
+    .item-grid div:nth-child(4),
+    .item-grid div:nth-child(5),
+    .item-grid div:nth-child(6),
+    .item-grid div:nth-child(7),
+    .item-grid div:nth-child(8) {
         display: none;
     }
 }

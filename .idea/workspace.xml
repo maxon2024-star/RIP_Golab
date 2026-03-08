@@ -4,31 +4,14 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="vvv">
-      <change afterPath="$PROJECT_DIR$/internal/app/ds/calculation_item.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/app/ds/radiation_calculation.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/app/repository/radiation_calculation.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_25_02_2026_15_01_[Changes]/shelved.patch" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_25_02_2026_15_01__Changes_.xml" beforeDir="false" />
+    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="all fixed not frequency">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/migrate/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/migrate/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/experiment_request.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/request_item.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/handler/auth.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/app/ds/calculation_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/calculation_item.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/app/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/handler/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/handler/radiation_range.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/repository/experiment_request.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/repository/radiation_range.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/repository/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/repository/repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/repository/request_delete.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/static/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/static/style.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/result.txt" beforeDir="false" afterPath="$PROJECT_DIR$/result.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/request.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/request.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/service_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/service_detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/services.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/services.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,6 +131,7 @@
     <MESSAGE value="renewed styles as requested" />
     <MESSAGE value="added wibes and renewed navigation" />
     <MESSAGE value="fully functional db conn" />
-    <option name="LAST_COMMIT_MESSAGE" value="fully functional db conn" />
+    <MESSAGE value="all fixed not frequency" />
+    <option name="LAST_COMMIT_MESSAGE" value="all fixed not frequency" />
   </component>
 </project>

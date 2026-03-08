@@ -25,13 +25,15 @@
         {{if .request.Items}}
         <div class="cart-table-wrapper">
             <div class="cart-table-inner">
-                <!-- Заголовок таблицы: 7 колонок -->
+                <!-- Заголовок таблицы: 9 колонок -->
                 <div class="table-header">
                     <div>Фото</div>
                     <div>Диапазон</div>
                     <div>Частота (Гц)</div>
-                    <div>Площадь (см²)</div>
+                    <div>Авых (эВ)</div>
+                    <div>S (см²)</div>
                     <div>КПД (%)</div>
+                    <div style="color: var(--primary);">Eк (эВ)</div>
                     <div>Ток (мА)</div>
                     <div>Действия</div>
                 </div>
@@ -39,38 +41,64 @@
                 <div class="items-container">
                     {{range .request.Items}}
                     <div class="item-card">
-                        <!-- Строка товара: 7 колонок -->
+                        <!-- Строка товара: 9 колонок -->
                         <div class="item-grid">
                             <div><img src="{{.Radiation.ImageURL}}" class="item-image" onerror="this.src='https://via.placeholder.com/60'"></div>
 
                             <div>
-                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">{{.Radiation.Name}}</div>
-                                <div style="font-size: 0.8rem; color: var(--text-secondary);">⚡ {{.Radiation.EnergyRange}}</div>
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 1rem;">{{.Radiation.Name}}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">По умолч: {{.Radiation.Frequency}}</div>
                             </div>
 
+                            <!-- Частота -->
                             <div>
                                 <input type="number" name="frequency" value="{{.Frequency}}" step="any" form="update-form-{{.ID}}" class="table-input" required>
                             </div>
 
+                            <!-- Работа выхода -->
+                            <div>
+                                <input type="number" name="work_function" value="{{.WorkFunction}}" step="any" form="update-form-{{.ID}}" class="table-input" required>
+                            </div>
+
+                            <!-- Площадь -->
                             <div>
                                 <input type="number" name="area" value="{{.Area}}" step="0.1" form="update-form-{{.ID}}" class="table-input" required>
                             </div>
 
+                            <!-- КПД -->
                             <div>
                                 <input type="number" name="efficiency" value="{{.Efficiency}}" step="0.1" form="update-form-{{.ID}}" class="table-input" required>
                             </div>
 
-                            <div class="result-value">
-                                {{.CalculatedCurrent}}
+                            <!-- Кинетическая энергия (Eк) -->
+                            <div style="font-weight: bold; color: var(--primary);">
+                                {{if gt .KineticEnergy 0.0}}
+                                {{printf "%.2f" .KineticEnergy}}
+                                {{else}}
+                                0.00
+                                {{end}}
                             </div>
 
-                            <div style="display: flex; gap: 8px;">
+                            <!-- Ток (с обработкой ошибок) -->
+                            <div class="result-value">
+                                {{if lt .CalculatedCurrent 0.0}}
+                                {{if eq .CalculatedCurrent -1.0}}
+                                <span class="error-msg" title="Энергии фотона не хватает для работы выхода">hν < A<br>(Нет эффекта)</span>
+                                {{else}}
+                                <span class="error-msg">Неверная<br>частота</span>
+                                {{end}}
+                                {{else}}
+                                {{printf "%.3f" .CalculatedCurrent}}
+                                {{end}}
+                            </div>
+
+                            <!-- Кнопки действий -->
+                            <div style="display: flex; gap: 8px; justify-content: center;">
                                 <form id="update-form-{{.ID}}" action="/update-item" method="POST" style="margin: 0;">
                                     <input type="hidden" name="item_id" value="{{.ID}}">
                                     <input type="hidden" name="calc_id" value="{{$.request.ID}}">
                                     <button type="submit" class="electric-btn-sm" title="Сохранить изменения">🔄</button>
                                 </form>
-
                                 <form action="/delete-item" method="POST" style="margin: 0;">
                                     <input type="hidden" name="item_id" value="{{.ID}}">
                                     <input type="hidden" name="calc_id" value="{{$.request.ID}}">

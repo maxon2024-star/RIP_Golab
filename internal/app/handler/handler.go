@@ -29,6 +29,8 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	router.POST("/delete-item", h.DeleteItem)
 	router.POST("/update-item", h.UpdateItem)
+
+	router.POST("/status-calculation", h.StatusCalculation)
 }
 func (h *Handler) RegisterStatic(router *gin.Engine) {
 	router.LoadHTMLGlob("templates/*")
@@ -128,41 +130,57 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 	}
 
 	totalCurrent := 0.0
+
+	// ФИЗИЧЕСКИЕ КОНСТАНТЫ СИ
+	const h_plank = 6.626e-34 // Постоянная Планка (Дж·с)
+	const e_charge = 1.6e-19  // Заряд электрона (Кл)
+	const P_density = 100.0   // Интенсивность (мощность) падающего света Вт/м^2 (Константа)
+
 	for i := range request.Items {
-		// Логика получения числовой частоты
-		var freqValue float64
+		freq := request.Items[i].Frequency
+		workFunc_eV := request.Items[i].WorkFunction
 
-		// 1. Пытаемся взять частоту из самого айтема (уже в Гц)
-		freqValue = request.Items[i].Frequency
-
-		// 2. Если в айтеме 0, пробуем распарсить строку из RadiationRange
-		if freqValue == 0 {
-			freqValue = parseFrequency(request.Items[i].Radiation.Frequency)
+		// Ошибка 1: Пользователь ввел 0 или отрицательную частоту
+		if freq <= 0 {
+			request.Items[i].CalculatedCurrent = -2
+			h.repo.GetDB().Save(&request.Items[i])
+			continue
 		}
 
-		// --- ФОРМУЛА РАСЧЕТА ---
-		// Ток (мА) = Площадь * КПД * (Частота / 10^14) / 1000
-		// Коэффициент 1e14 выбран как средний для видимого света
-		frequencyFactor := freqValue / 1e14
+		// 1. Энергия падающего фотона E = h * v (в Джоулях)
+		E_photon_J := h_plank * freq
 
-		// Ограничители, чтобы значения не улетали в бесконечность
-		if frequencyFactor > 100 {
-			frequencyFactor = 100
+		// Переводим работу выхода из эВ в Джоули
+		workFunc_J := workFunc_eV * e_charge
+
+		// 2. Уравнение Эйнштейна: Кинетическая энергия E_k = h*v - A
+		E_k_J := E_photon_J - workFunc_J
+
+		// Сохраняем кинетическую энергию в эВ для отображения в таблице
+		request.Items[i].KineticEnergy = E_k_J / e_charge
+
+		// Ошибка 2: Красная граница фотоэффекта. Энергии не хватает (h*v < A)
+		if E_k_J <= 0 {
+			request.Items[i].KineticEnergy = 0
+			request.Items[i].CalculatedCurrent = -1
+			h.repo.GetDB().Save(&request.Items[i])
+			continue
 		}
-		if frequencyFactor < 0.0001 {
-			frequencyFactor = 0.0001
-		}
 
-		current := request.Items[i].Area * (request.Items[i].Efficiency / 100) * frequencyFactor
-		request.Items[i].CalculatedCurrent = current
+		// 3. Расчет тока насыщения (I = N_e * e)
+		area_m2 := request.Items[i].Area * 1e-4                          // Площадь в м^2
+		power_W := P_density * area_m2                                   // Мощность света на эту площадь (Вт = Дж/с)
+		N_photons := power_W / E_photon_J                                // Кол-во падающих фотонов в секунду
+		N_electrons := N_photons * (request.Items[i].Efficiency / 100.0) // Выбитые электроны с учетом КПД
+		current_A := N_electrons * e_charge                              // Ток в Амперах
 
-		// Сохраняем результат в БД
-		h.repo.GetDB().Model(&request.Items[i]).Update("calculated_current", current)
+		// Перевод в мА
+		request.Items[i].CalculatedCurrent = current_A * 1000
+		h.repo.GetDB().Save(&request.Items[i])
 
-		totalCurrent += current
+		totalCurrent += request.Items[i].CalculatedCurrent
 	}
 
-	// Обновляем общий итог в заявке
 	h.repo.GetDB().Model(request).Update("total_current", totalCurrent)
 
 	c.HTML(http.StatusOK, "request.html", gin.H{
@@ -173,34 +191,24 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 }
 
 func (h *Handler) AddToCalculation(c *gin.Context) {
-	serviceIDStr := c.PostForm("service_id")
-	areaStr := c.PostForm("area")
-	efficiencyStr := c.PostForm("efficiency")
-	frequencyStr := c.PostForm("frequency") // Приходит как строка
-
-	serviceID, _ := strconv.Atoi(serviceIDStr)
-	area, _ := strconv.ParseFloat(areaStr, 64)
+	serviceID, _ := strconv.Atoi(c.PostForm("service_id"))
+	area, _ := strconv.ParseFloat(c.PostForm("area"), 64)
 	if area == 0 {
 		area = 10
 	}
-	efficiency, _ := strconv.ParseFloat(efficiencyStr, 64)
+	efficiency, _ := strconv.ParseFloat(c.PostForm("efficiency"), 64)
 	if efficiency == 0 {
 		efficiency = 18
 	}
+	workFunc, _ := strconv.ParseFloat(c.PostForm("work_function"), 64)
+	if workFunc == 0 {
+		workFunc = 2.0
+	} // Дефолт работы выхода (например, Цезий)
 
-	var frequency float64
-	// Если пользователь оставил поле частоты пустым - берем стандартную из услуги
-	if frequencyStr == "" {
-		service, _ := h.repo.GetRadiationRangeByID(uint(serviceID))
-		if service != nil {
-			frequency = parseFrequency(service.Frequency) // преобразуем строку из БД в число Гц
-		}
-	} else {
-		frequency, _ = strconv.ParseFloat(frequencyStr, 64)
-	}
+	// БЕРЕМ ЧАСТОТУ КАК ЕСТЬ. ЕСЛИ ПУСТАЯ - БУДЕТ 0 (Выдаст ошибку пользователю!)
+	frequency, _ := strconv.ParseFloat(c.PostForm("frequency"), 64)
 
 	userID := h.getUserID(c)
-
 	request, err := h.repo.GetCalculationByUserID(userID)
 	if err != nil {
 		request = &ds.RadiationCalculation{UserID: userID, Status: "draft"}
@@ -218,7 +226,8 @@ func (h *Handler) AddToCalculation(c *gin.Context) {
 			RadiationID:   uint(serviceID),
 			Area:          area,
 			Efficiency:    efficiency,
-			Frequency:     frequency, // Теперь сохраняем float64
+			WorkFunction:  workFunc,
+			Frequency:     frequency,
 		}
 		h.repo.AddItemToCalculation(item)
 	}
@@ -276,14 +285,33 @@ func (h *Handler) DeleteItem(c *gin.Context) {
 func (h *Handler) UpdateItem(c *gin.Context) {
 	itemID, _ := strconv.Atoi(c.PostForm("item_id"))
 	calcIDStr := c.PostForm("calc_id")
+
 	area, _ := strconv.ParseFloat(c.PostForm("area"), 64)
 	efficiency, _ := strconv.ParseFloat(c.PostForm("efficiency"), 64)
-	frequency, _ := strconv.ParseFloat(c.PostForm("frequency"), 64) // Парсим число
+	workFunc, _ := strconv.ParseFloat(c.PostForm("work_function"), 64)
+	frequency, _ := strconv.ParseFloat(c.PostForm("frequency"), 64)
 
 	h.repo.GetDB().Model(&ds.CalculationItem{}).Where("id = ?", itemID).Updates(map[string]interface{}{
-		"area":       area,
-		"efficiency": efficiency,
-		"frequency":  frequency,
+		"area":          area,
+		"efficiency":    efficiency,
+		"work_function": workFunc,
+		"frequency":     frequency,
 	})
 	c.Redirect(http.StatusFound, "/radiation_calculation/"+calcIDStr)
+}
+
+// ОТПРАВКА НА МОДЕРАЦИЮ
+func (h *Handler) StatusCalculation(c *gin.Context) {
+	calcIDStr := c.PostForm("calc_id")
+	calcID, err := strconv.Atoi(calcIDStr)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
+
+	// Обновляем статус заявки на "сформирован" и фиксируем время
+	h.repo.GetDB().Exec("UPDATE radiation_calculations SET status = 'сформирован', formed_at = NOW() WHERE id = ?", calcID)
+
+	// После отправки кидаем пользователя на главную страницу
+	c.Redirect(http.StatusFound, "/")
 }
