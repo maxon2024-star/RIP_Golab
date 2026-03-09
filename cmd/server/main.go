@@ -6,6 +6,7 @@ import (
 	"RIP_Golab/internal/app/handler"
 	"RIP_Golab/internal/app/repository"
 	"RIP_Golab/internal/pkg"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -22,7 +23,15 @@ func main() {
 	postgresString := dsn.FromEnv()
 	logrus.Infof("DB DSN: %s", postgresString)
 
-	rep, err := repository.New(postgresString)
+	repSettings := &repository.RepositorySettings{
+		PostgresDSN:     postgresString,
+		MinioEndpoint:   os.Getenv("MINIO_ENDPOINT"),
+		MinioAccessKey:  os.Getenv("MINIO_ACCESS_KEY"),
+		MinioSecretKey:  os.Getenv("MINIO_SECRET_KEY"),
+		MinioBucketName: os.Getenv("MINIO_BUCKET_NAME"),
+	}
+
+	rep, err := repository.New(repSettings)
 	if err != nil {
 		logrus.Fatalf("error initializing repository: %v", err)
 	}

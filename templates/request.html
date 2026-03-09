@@ -13,10 +13,7 @@
     </header>
 
     <div class="sub-header">
-        <a href="/" class="btn-details">⬅ На главную</a>
-        <div class="cart-icon" title="Заявка">
-            🛒<span class="cart-count">{{.count}}</span>
-        </div>
+        <a href="/" class="btn-details">🏠︎</a>
     </div>
 
     <main class="main-content">
@@ -113,7 +110,7 @@
         </div>
 
         <div class="total-card">
-            <h2 style="margin: 0;">Общий ток фотоэффекта: <span style="font-size: 1.5em;">{{.totalCurrent}} мА</span></h2>
+            <h2 style="margin: 0;">Общий ток фотоэффекта: <span style="font-size: 1.5em;">{{printf "%.3f" .totalCurrent}} мА</span></h2>
         </div>
 
         <div class="status-actions">

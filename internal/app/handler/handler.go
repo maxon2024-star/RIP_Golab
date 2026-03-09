@@ -19,6 +19,14 @@ func NewHandler(repo *repository.Repository) *Handler {
 	return &Handler{repo: repo}
 }
 
+// Функция-singleton пользователя по ТЗ
+func CurrentUser() uint {
+	return 1 // Константа: всегда работаем от лица пользователя ID=1 (user)
+}
+func CurrentModerator() uint {
+	return 2 // Константа: модератор ID=2 (admin)
+}
+
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/", h.GetServiceList)
 	router.GET("/service/:id", h.GetServiceDetail)
@@ -31,6 +39,34 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.POST("/update-item", h.UpdateItem)
 
 	router.POST("/status-calculation", h.StatusCalculation)
+
+	// ---------------- НОВЫЕ REST API РОУТЫ (/api) ----------------
+	api := router.Group("/api")
+	{
+		// Домен услуги
+		api.GET("/services", h.GetServicesAPI)
+		api.GET("/services/:id", h.GetServiceAPI)
+		api.POST("/services", h.AddServiceAPI) // Multipart form
+
+		// Домен м-м (Корзина/Услуги заявки)
+		api.POST("/cart", h.AddToCartAPI)
+		api.PUT("/cart", h.UpdateCartAPI)
+		api.DELETE("/cart", h.DeleteFromCartAPI)
+
+		// Домен заявки
+		api.GET("/cart/icon", h.GetCartIconAPI)
+		api.GET("/requests", h.GetRequestsAPI)
+		api.GET("/requests/:id", h.GetRequestAPI)
+		api.PUT("/requests/:id", h.UpdateRequestAPI)
+		api.PUT("/requests/:id/form", h.FormRequestAPI)         // Вычисление формулы тут!
+		api.PUT("/requests/:id/complete", h.CompleteRequestAPI) // Завершить/Отклонить
+		api.DELETE("/requests/:id", h.DeleteRequestAPI)
+
+		// Домен пользователь
+		api.POST("/register", h.RegisterAPI)
+		api.POST("/login", h.LoginAPI)
+		api.POST("/logout", h.LogoutAPI)
+	}
 }
 func (h *Handler) RegisterStatic(router *gin.Engine) {
 	router.LoadHTMLGlob("templates/*")
