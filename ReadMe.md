@@ -228,25 +228,29 @@ go run cmd/server/main.go
 
 ## Тестирование в Postman/Insomnia
 
+### 4 домена API:
+1. **Домен услуги (Излучения):** `/api/radiations`
+2. **Домен м-м связи (Элементы расчета):** `/api/calculation-items`
+3. **Домен заявки (Расчеты):** `/api/calculations`
+4. **Домен пользователя:** `/api/users/*`
+
 ### Коллекция из 16 запросов для демонстрации
-
-1. **GET** `/api/services?search=свет` — список услуг с фильтром
-2. **GET** `/api/services/3` — одна услуга
-3. **GET** `/api/cart/icon` — иконка корзины (пустая)
-4. **GET** `/api/requests?status=сформирован&date_from=2025-01-01` — список заявок
-5. **POST** `/api/services` — добавление услуги с файлами (multipart)
-6. **POST** `/api/cart` — добавление услуги в черновик
-7. **POST** `/api/cart` — добавление второй услуги в черновик
-8. **GET** `/api/cart/icon` — иконка корзины (с услугами)
-9. **GET** `/api/requests/1` — просмотр заявки с услугами
-10. **PUT** `/api/cart` — изменение параметров услуги в заявке
-11. **PUT** `/api/requests/1` — изменение полей заявки
-12. **PUT** `/api/requests/1/complete` — завершение (ошибка, статус draft)
-13. **PUT** `/api/requests/1/form` — сформировать заявку (расчёт формулы)
-14. **PUT** `/api/requests/1/complete` — завершить сформированную заявку
-15. **DELETE** `/api/requests/1` — логическое удаление заявки
-16. **POST** `/api/register` — регистрация нового пользователя
-
+1. **GET** `/api/radiations?search=свет`
+2. **GET** `/api/radiations/3`
+3. **GET** `/api/calculations/draft-summary`
+4. **GET** `/api/calculations?status=сформирован&date_from=2025-01-01`
+5. **POST** `/api/radiations` (добавление услуги с multipart)
+6. **POST** `/api/calculation-items` (добавление в черновик)
+7. **POST** `/api/calculation-items` (добавление второй услуги)
+8. **GET** `/api/calculations/draft-summary` (иконка корзины с услугами)
+9. **GET** `/api/calculations/1`
+10. **PUT** `/api/calculation-items` (изменение м-м без PK)
+11. **PUT** `/api/calculations/1` (изменение полей заявки)
+12. **PUT** `/api/calculations/1/complete` (завершение - должна быть ошибка)
+13. **PUT** `/api/calculations/1/form` (сформировать и рассчитать)
+14. **PUT** `/api/calculations/1/complete` (завершить сформированную)
+15. **DELETE** `/api/calculations/1` (логическое удаление заявки)
+16. **POST** `/api/users/register` (регистрация)
 ### Примеры запросов
 
 **Добавление услуги с файлами:**

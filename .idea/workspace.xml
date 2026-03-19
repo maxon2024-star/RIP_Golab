@@ -4,17 +4,15 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="deleted extra icons">
-      <change afterPath="$PROJECT_DIR$/internal/app/handler/api.go" afterDir="false" />
+    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="full working lab3">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ReadMe.md" beforeDir="false" afterPath="$PROJECT_DIR$/ReadMe.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/migrate/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/migrate/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/app/ds/calculation_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/calculation_item.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/app/handler/api.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/handler/api.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/app/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/handler/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/repository/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/repository/repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/request.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/request.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/static/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/static/style.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/service_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/service_detail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -60,26 +58,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultGoTemplateProperty": "Go File",
-    "DefaultHtmlFileTemplate": "HTML File",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.GoLinterPluginOnboardingV2": "true",
-    "RunOnceActivity.GoLinterPluginStorageMigration": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.go.analysis.ui.options.defaults": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "rest-api-integration",
-    "go.sdk.automatically.set": "true",
-    "last_opened_file_path": "C:/Users/MaxZ",
-    "nodejs_package_manager_path": "npm"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginOnboardingV2&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.GoLinterPluginStorageMigration&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.analysis.ui.options.defaults&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;rest-api-integration&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/MaxZ&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\MaxZ\GolandProjects\RIP_Golab1\internal" />
@@ -139,6 +137,7 @@
     <MESSAGE value="all fixed full lab2" />
     <MESSAGE value="deleted extra files" />
     <MESSAGE value="deleted extra icons" />
-    <option name="LAST_COMMIT_MESSAGE" value="deleted extra icons" />
+    <MESSAGE value="full working lab3" />
+    <option name="LAST_COMMIT_MESSAGE" value="full working lab3" />
   </component>
 </project>

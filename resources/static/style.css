@@ -263,28 +263,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* Кнопки */
-.electric-btn {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    box-shadow: 0 4px 12px var(--primary-glow);
-}
-
-.electric-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px var(--primary-glow);
-}
-
 .btn-add {
     width: 100%;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
@@ -307,7 +285,6 @@ body {
     box-shadow: 0 6px 20px var(--primary-glow);
 }
 
-
 /* ================= REQUEST PAGE (ЗАЯВКА С ТАБЛИЦЕЙ) ================= */
 .cart-table-wrapper {
     width: 100%;
@@ -320,10 +297,9 @@ body {
 }
 
 .cart-table-inner {
-    min-width: 1200px; /* Увеличено для 9 колонок */
+    min-width: 1200px;
 }
 
-/* ИДЕАЛЬНАЯ СЕТКА (9 колонок): Фото | Имя | Частота | Работа | Площадь | КПД | Ek | Ток | Действия */
 .table-header, .item-grid {
     display: grid;
     grid-template-columns: 60px 1.5fr 110px 80px 80px 80px 80px 100px 80px;
@@ -332,7 +308,6 @@ body {
     text-align: center;
 }
 
-/* Выравнивание названия по левому краю */
 .table-header div:nth-child(2), .item-grid div:nth-child(2) {
     text-align: left;
 }
@@ -368,7 +343,6 @@ body {
     border: 1px solid var(--border);
 }
 
-/* Инпуты внутри таблицы */
 .table-input {
     width: 100%;
     padding: 8px;
@@ -391,7 +365,6 @@ body {
     color: var(--success);
 }
 
-/* Красный текст для ошибок физики */
 .error-msg {
     color: var(--danger);
     font-size: 0.8rem;
@@ -399,7 +372,6 @@ body {
     line-height: 1.2;
 }
 
-/* Кнопки в таблице */
 .electric-btn-sm {
     background: var(--primary);
     color: white;
@@ -442,7 +414,6 @@ body {
     transform: scale(1.1);
 }
 
-/* Total Section */
 .total-card {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
     border-radius: var(--radius);
@@ -493,7 +464,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* Empty Cart */
 .empty-cart {
     text-align: center;
     padding: 80px 20px;
@@ -506,41 +476,39 @@ body {
     display: block;
 }
 
-.empty-cart p {
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-}
-
-.browse-btn {
-    display: inline-block;
-    background: var(--primary);
-    color: white;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-
 /* ================= VIBES LAYOUT (СТРАНИЦА ПОДРОБНЕЕ) ================= */
 .detail-container-vibes {
     padding: 20px;
     max-width: 1000px;
     margin: 0 auto;
+    background: transparent !important;
 }
 
+/* ЗАГОЛОВОК НАД ВИДЕО (ЦЕНТР) */
+.experiment-title {
+    text-align: center;
+    color: var(--primary-dark);
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-weight: 800;
+    width: 100%;
+}
+
+/* ИДЕАЛЬНОЕ ВЫРАВНИВАНИЕ ПО ГОРИЗОНТАЛИ */
 .vibes-layout {
     display: flex;
-    flex-wrap: wrap;
-    gap: 30px;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
     justify-content: center;
+    gap: 60px; /* Отступ между видео и формой */
+    margin-top: 10px;
 }
 
+/* БЛОК С ВИДЕО */
 .vibes-video-section {
     position: relative;
-    width: 350px;
-    height: 620px;
+    width: 320px;
+    height: 560px;
     flex-shrink: 0;
     border-radius: var(--radius);
     overflow: hidden;
@@ -551,91 +519,125 @@ body {
 .tiktok-video {
     width: 100%;
     height: 100%;
-    max-width: 100%;
     object-fit: cover;
     display: block;
 }
 
+/* ТЕКСТ НА ВИДЕО */
 .vibes-video-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 80px 20px 20px;
+    padding: 60px 20px 20px;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.4), transparent);
     color: white;
     z-index: 10;
     pointer-events: none;
 }
 
+.video-title {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    font-weight: 700;
+}
+
+.video-description {
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    line-height: 1.3;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    color: #e2e8f0;
+}
+
+.video-specs {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    color: var(--primary-light);
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* ФОРМА БЕЗ БЕЛОЙ ПОДЛОЖКИ */
 .vibes-form-section {
-    flex: 1;
-    min-width: 300px;
-    background: var(--surface);
-    padding: 30px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
+    width: 300px; /* Сузили поля! */
+    background: transparent !important; /* УБИЛИ БЕЛЫЙ ФОН НАВЕРНЯКА */
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
+/* КРАСИВЫЕ ПОЛЯ ВВОДА */
 .form-field {
-    margin-bottom: 15px;
-}
-
-.form-field label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    font-weight: 500;
+    margin-bottom: 18px;
 }
 
 .form-field input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 1rem;
-    background: var(--background);
+    padding: 14px 16px;
+    border: 2px solid var(--primary-glow);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.6); /* Легкая прозрачность самого инпута */
     color: var(--text-primary);
+    transition: all 0.3s ease;
+    font-weight: 600;
+    backdrop-filter: blur(5px);
+}
+
+.form-field input::placeholder {
+    color: #64748b;
+    font-weight: 500;
 }
 
 .form-field input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary-glow);
+    background: #ffffff;
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+/* КНОПКА ДОБАВЛЕНИЯ */
+.btn-add-cart {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px var(--primary-glow);
+    margin-top: 10px;
+}
+
+.btn-add-cart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--primary-glow);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
 }
 
 /* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
     .vibes-layout {
         flex-direction: column;
+        gap: 30px;
+    }
+    .vibes-video-section, .vibes-form-section {
+        width: 100%;
+        max-width: 320px;
     }
     .vibes-video-section {
-        width: 100%;
         height: 500px;
     }
-    .status-actions {
-        flex-direction: column;
-    }
-
-    /* Адаптация таблицы под мобильные: показываем только главное */
     .table-header, .item-grid {
         grid-template-columns: 60px 1fr 70px;
     }
-    /* Скрываем лишние колонки на мобильных (3-8) */
-    .table-header div:nth-child(3),
-    .table-header div:nth-child(4),
-    .table-header div:nth-child(5),
-    .table-header div:nth-child(6),
-    .table-header div:nth-child(7),
-    .table-header div:nth-child(8),
-    .item-grid div:nth-child(3),
-    .item-grid div:nth-child(4),
-    .item-grid div:nth-child(5),
-    .item-grid div:nth-child(6),
-    .item-grid div:nth-child(7),
-    .item-grid div:nth-child(8) {
+    .table-header div:nth-child(n+3):nth-child(-n+8),
+    .item-grid div:nth-child(n+3):nth-child(-n+8) {
         display: none;
     }
 }

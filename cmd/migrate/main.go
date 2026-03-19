@@ -18,9 +18,10 @@ func main() {
 		log.Fatal("❌ Error connecting to database:", err)
 	}
 
-	// Очищаем БД от старых таблиц принудительно
+	// Очищаем БД от старых таблиц принудительно (добавили calculation_items)
 	db.Exec("DROP TABLE IF EXISTS request_items CASCADE")
 	db.Exec("DROP TABLE IF EXISTS experiment_requests CASCADE")
+	db.Exec("DROP TABLE IF EXISTS calculation_items CASCADE")
 	db.Exec("DROP TABLE IF EXISTS radiation_calculations CASCADE")
 	db.Exec("DROP TABLE IF EXISTS radiation_ranges CASCADE")
 	db.Exec("DROP TABLE IF EXISTS users CASCADE")
@@ -36,7 +37,7 @@ func main() {
 	}
 	log.Println("✅ Миграции выполнены!")
 
-	db.Exec("ALTER TABLE request_items ADD CONSTRAINT IF NOT EXISTS uk_request_radiation UNIQUE (request_id, radiation_id)")
+	// Строку с ALTER TABLE убрали, GORM сам создаст индекс из тега уникальности
 	SeedTestData(db)
 }
 
@@ -56,31 +57,37 @@ func SeedTestData(db *gorm.DB) {
 	var count int64
 	db.Model(&ds.RadiationRange{}).Count(&count)
 	if count == 0 {
+		// ДОБАВИЛИ поле WorkFunction для каждой услуги
 		ranges := []ds.RadiationRange{
 			{
 				Name: "Радиоволны", Description: "Диапазон ЭМИ",
 				ImageURL: "http://localhost:9000/physicsservice/radio.jpg", VideoURL: "http://localhost:9000/physicsservice/radio.mp4",
-				Wavelength: "1 мм - 100 км", EnergyRange: "12.4 мкэВ - 1.24 мэВ", Frequency: "3 кГц - 300 ГГц", IsDelete: false,
+				Wavelength: "1 мм - 100 км", EnergyRange: "12.4 мкэВ - 1.24 мэВ", Frequency: "3 кГц - 300 ГГц",
+				WorkFunction: 2.0, IsDelete: false,
 			},
 			{
 				Name: "Инфракрасное излучение", Description: "Тепловое излучение объектов",
 				ImageURL: "http://localhost:9000/physicsservice/infrared.jpg", VideoURL: "http://localhost:9000/physicsservice/infrared.mp4",
-				Wavelength: "700 нм - 1 мм", EnergyRange: "1.24 - 1.77 эВ", Frequency: "300 ГГц - 430 ТГц", IsDelete: false,
+				Wavelength: "700 нм - 1 мм", EnergyRange: "1.24 - 1.77 эВ", Frequency: "300 ГГц - 430 ТГц",
+				WorkFunction: 2.1, IsDelete: false,
 			},
 			{
 				Name: "Видимый свет", Description: "Базовое видимое отраженное излучение объектов",
 				ImageURL: "http://localhost:9000/physicsservice/visible.jpg", VideoURL: "http://localhost:9000/physicsservice/visible.mp4",
-				Wavelength: "380 - 700 нм", EnergyRange: "1.77 - 3.26 эВ", Frequency: "430 - 790 ТГц", IsDelete: false,
+				Wavelength: "380 - 700 нм", EnergyRange: "1.77 - 3.26 эВ", Frequency: "430 - 790 ТГц",
+				WorkFunction: 2.2, IsDelete: false,
 			},
 			{
 				Name: "Ультрафиолет", Description: "Невидимая часть солнечного спектра",
 				ImageURL: "http://localhost:9000/physicsservice/uv.jpg", VideoURL: "http://localhost:9000/physicsservice/uv.mp4",
-				Wavelength: "10 - 400 нм", EnergyRange: "3.1 - 124 эВ", Frequency: "790 ТГц - 30 ПГц", IsDelete: false,
+				Wavelength: "10 - 400 нм", EnergyRange: "3.1 - 124 эВ", Frequency: "790 ТГц - 30 ПГц",
+				WorkFunction: 4.5, IsDelete: false,
 			},
 			{
 				Name: "Рентген", Description: "Самые высокоэнергетичные частицы",
 				ImageURL: "http://localhost:9000/physicsservice/xray.jpg", VideoURL: "http://localhost:9000/physicsservice/xray.mp4",
-				Wavelength: "0.01 - 10 нм", EnergyRange: "124 эВ - 124 кэВ", Frequency: "30 ПГц - 30 ЭГц", IsDelete: false,
+				Wavelength: "0.01 - 10 нм", EnergyRange: "124 эВ - 124 кэВ", Frequency: "30 ПГц - 30 ЭГц",
+				WorkFunction: 5.0, IsDelete: false,
 			},
 		}
 		for _, r := range ranges {

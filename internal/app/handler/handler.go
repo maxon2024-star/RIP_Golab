@@ -19,13 +19,8 @@ func NewHandler(repo *repository.Repository) *Handler {
 	return &Handler{repo: repo}
 }
 
-// Функция-singleton пользователя по ТЗ
-func CurrentUser() uint {
-	return 1 // Константа: всегда работаем от лица пользователя ID=1 (user)
-}
-func CurrentModerator() uint {
-	return 2 // Константа: модератор ID=2 (admin)
-}
+func CurrentUser() uint      { return 1 }
+func CurrentModerator() uint { return 2 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/", h.GetServiceList)
@@ -40,48 +35,43 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	router.POST("/status-calculation", h.StatusCalculation)
 
-	// ---------------- НОВЫЕ REST API РОУТЫ (/api) ----------------
 	api := router.Group("/api")
 	{
-		// Домен услуги
-		api.GET("/services", h.GetServicesAPI)
-		api.GET("/services/:id", h.GetServiceAPI)
-		api.POST("/services", h.AddServiceAPI) // Multipart form
+		api.GET("/radiations", h.GetRadiationsAPI)
+		api.GET("/radiations/:id", h.GetRadiationAPI)
+		api.POST("/radiations", h.AddRadiationAPI)
 
-		// Домен м-м (Корзина/Услуги заявки)
-		api.POST("/cart", h.AddToCartAPI)
-		api.PUT("/cart", h.UpdateCartAPI)
-		api.DELETE("/cart", h.DeleteFromCartAPI)
+		api.POST("/calculation-items", h.AddCalculationItemAPI)
+		api.PUT("/calculation-items", h.UpdateCalculationItemAPI)
+		api.DELETE("/calculation-items", h.DeleteCalculationItemAPI)
 
-		// Домен заявки
-		api.GET("/cart/icon", h.GetCartIconAPI)
-		api.GET("/requests", h.GetRequestsAPI)
-		api.GET("/requests/:id", h.GetRequestAPI)
-		api.PUT("/requests/:id", h.UpdateRequestAPI)
-		api.PUT("/requests/:id/form", h.FormRequestAPI)         // Вычисление формулы тут!
-		api.PUT("/requests/:id/complete", h.CompleteRequestAPI) // Завершить/Отклонить
-		api.DELETE("/requests/:id", h.DeleteRequestAPI)
+		api.GET("/calculations/draft-summary", h.GetDraftSummaryAPI)
+		api.GET("/calculations", h.GetCalculationsAPI)
+		api.GET("/calculations/:id", h.GetCalculationAPI)
+		api.PUT("/calculations/:id", h.UpdateCalculationAPI)
+		api.PUT("/calculations/:id/form", h.FormCalculationAPI)
+		api.PUT("/calculations/:id/complete", h.CompleteCalculationAPI)
+		api.DELETE("/calculations/:id", h.DeleteCalculationAPI)
 
-		// Домен пользователь
-		api.POST("/register", h.RegisterAPI)
-		api.POST("/login", h.LoginAPI)
-		api.POST("/logout", h.LogoutAPI)
+		api.POST("/users/register", h.RegisterAPI)
+		api.POST("/users/login", h.LoginAPI)
+		api.POST("/users/logout", h.LogoutAPI)
 	}
 }
+
 func (h *Handler) RegisterStatic(router *gin.Engine) {
 	router.LoadHTMLGlob("templates/*")
 	router.Static("/static", "./resources/static")
 	router.Static("/img", "./resources/img")
 }
 
-// ИСПРАВЛЕНИЕ: Вместо 404.html делаем редирект
 func (h *Handler) errorHandler(ctx *gin.Context, statusCode int, err error) {
 	logrus.Error(err.Error())
 	ctx.Redirect(http.StatusFound, "/")
 }
 
 func (h *Handler) getUserID(c *gin.Context) uint {
-	return 1
+	return CurrentUser()
 }
 
 func (h *Handler) GetServiceList(c *gin.Context) {
@@ -166,36 +156,27 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 	}
 
 	totalCurrent := 0.0
-
-	// ФИЗИЧЕСКИЕ КОНСТАНТЫ СИ
-	const h_plank = 6.626e-34 // Постоянная Планка (Дж·с)
-	const e_charge = 1.6e-19  // Заряд электрона (Кл)
-	const P_density = 100.0   // Интенсивность (мощность) падающего света Вт/м^2 (Константа)
+	const h_plank = 6.626e-34
+	const e_charge = 1.6e-19
+	const P_density = 100.0
 
 	for i := range request.Items {
+		// ТЕПЕРЬ МЫ БЕРЕМ ЗНАЧЕНИЯ ПРЯМО ИЗ БАЗЫ ДАННЫХ, А НЕ ИЗ КАТАЛОГА!
 		freq := request.Items[i].Frequency
 		workFunc_eV := request.Items[i].WorkFunction
 
-		// Ошибка 1: Пользователь ввел 0 или отрицательную частоту
 		if freq <= 0 {
 			request.Items[i].CalculatedCurrent = -2
 			h.repo.GetDB().Save(&request.Items[i])
 			continue
 		}
 
-		// 1. Энергия падающего фотона E = h * v (в Джоулях)
 		E_photon_J := h_plank * freq
-
-		// Переводим работу выхода из эВ в Джоули
 		workFunc_J := workFunc_eV * e_charge
-
-		// 2. Уравнение Эйнштейна: Кинетическая энергия E_k = h*v - A
 		E_k_J := E_photon_J - workFunc_J
 
-		// Сохраняем кинетическую энергию в эВ для отображения в таблице
 		request.Items[i].KineticEnergy = E_k_J / e_charge
 
-		// Ошибка 2: Красная граница фотоэффекта. Энергии не хватает (h*v < A)
 		if E_k_J <= 0 {
 			request.Items[i].KineticEnergy = 0
 			request.Items[i].CalculatedCurrent = -1
@@ -203,17 +184,15 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 			continue
 		}
 
-		// 3. Расчет тока насыщения (I = N_e * e)
-		area_m2 := request.Items[i].Area * 1e-4                          // Площадь в м^2
-		power_W := P_density * area_m2                                   // Мощность света на эту площадь (Вт = Дж/с)
-		N_photons := power_W / E_photon_J                                // Кол-во падающих фотонов в секунду
-		N_electrons := N_photons * (request.Items[i].Efficiency / 100.0) // Выбитые электроны с учетом КПД
-		current_A := N_electrons * e_charge                              // Ток в Амперах
+		area_m2 := request.Items[i].Area * 1e-4
+		power_W := P_density * area_m2
+		N_photons := power_W / E_photon_J
+		N_electrons := N_photons * (request.Items[i].Efficiency / 100.0)
+		current_A := N_electrons * e_charge
 
-		// Перевод в мА
 		request.Items[i].CalculatedCurrent = current_A * 1000
-		h.repo.GetDB().Save(&request.Items[i])
 
+		h.repo.GetDB().Save(&request.Items[i])
 		totalCurrent += request.Items[i].CalculatedCurrent
 	}
 
@@ -228,21 +207,35 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 
 func (h *Handler) AddToCalculation(c *gin.Context) {
 	serviceID, _ := strconv.Atoi(c.PostForm("service_id"))
-	area, _ := strconv.ParseFloat(c.PostForm("area"), 64)
+
+	areaStr := strings.ReplaceAll(c.PostForm("area"), ",", ".")
+	effStr := strings.ReplaceAll(c.PostForm("efficiency"), ",", ".")
+	freqStr := strings.ReplaceAll(c.PostForm("frequency"), ",", ".")
+	workFuncStr := strings.ReplaceAll(c.PostForm("work_function"), ",", ".")
+
+	area, _ := strconv.ParseFloat(areaStr, 64)
 	if area == 0 {
 		area = 10
 	}
-	efficiency, _ := strconv.ParseFloat(c.PostForm("efficiency"), 64)
+
+	efficiency, _ := strconv.ParseFloat(effStr, 64)
 	if efficiency == 0 {
 		efficiency = 18
 	}
-	workFunc, _ := strconv.ParseFloat(c.PostForm("work_function"), 64)
-	if workFunc == 0 {
-		workFunc = 2.0
-	} // Дефолт работы выхода (например, Цезий)
 
-	// БЕРЕМ ЧАСТОТУ КАК ЕСТЬ. ЕСЛИ ПУСТАЯ - БУДЕТ 0 (Выдаст ошибку пользователю!)
-	frequency, _ := strconv.ParseFloat(c.PostForm("frequency"), 64)
+	frequency, _ := strconv.ParseFloat(freqStr, 64)
+	workFunc, _ := strconv.ParseFloat(workFuncStr, 64)
+
+	// Берем дефолты из справочника, только если чувак оставил поля пустыми (при создании)
+	var rad ds.RadiationRange
+	h.repo.GetDB().First(&rad, serviceID)
+
+	if frequency == 0 {
+		frequency = parseFrequency(rad.Frequency)
+	}
+	if workFunc == 0 {
+		workFunc = rad.WorkFunction
+	}
 
 	userID := h.getUserID(c)
 	request, err := h.repo.GetCalculationByUserID(userID)
@@ -262,8 +255,8 @@ func (h *Handler) AddToCalculation(c *gin.Context) {
 			RadiationID:   uint(serviceID),
 			Area:          area,
 			Efficiency:    efficiency,
-			WorkFunction:  workFunc,
 			Frequency:     frequency,
+			WorkFunction:  workFunc,
 		}
 		h.repo.AddItemToCalculation(item)
 	}
@@ -283,7 +276,7 @@ func parseFrequency(freqStr string) float64 {
 		return 0
 	}
 	multipliers := map[string]float64{
-		"кГц": 1e3, "МГц": 1e6, "ГГц": 1e9, "ТГц": 1e12, "ПГц": 1e15,
+		"кГц": 1e3, "МГц": 1e6, "ГГц": 1e9, "ТГц": 1e12, "ПГц": 1e15, "ЭГц": 1e18,
 	}
 	for unit, mult := range multipliers {
 		if strings.Contains(freqStr, unit) {
@@ -309,7 +302,6 @@ func parseFrequency(freqStr string) float64 {
 	return 0
 }
 
-// УДАЛЕНИЕ ИЗ КОРЗИНЫ
 func (h *Handler) DeleteItem(c *gin.Context) {
 	itemID, _ := strconv.Atoi(c.PostForm("item_id"))
 	calcIDStr := c.PostForm("calc_id")
@@ -317,26 +309,31 @@ func (h *Handler) DeleteItem(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/radiation_calculation/"+calcIDStr)
 }
 
-// ОБНОВЛЕНИЕ ЗНАЧЕНИЙ В КОРЗИНЕ
 func (h *Handler) UpdateItem(c *gin.Context) {
 	itemID, _ := strconv.Atoi(c.PostForm("item_id"))
 	calcIDStr := c.PostForm("calc_id")
 
-	area, _ := strconv.ParseFloat(c.PostForm("area"), 64)
-	efficiency, _ := strconv.ParseFloat(c.PostForm("efficiency"), 64)
-	workFunc, _ := strconv.ParseFloat(c.PostForm("work_function"), 64)
-	frequency, _ := strconv.ParseFloat(c.PostForm("frequency"), 64)
+	areaStr := strings.ReplaceAll(c.PostForm("area"), ",", ".")
+	effStr := strings.ReplaceAll(c.PostForm("efficiency"), ",", ".")
+	freqStr := strings.ReplaceAll(c.PostForm("frequency"), ",", ".")
+	workFuncStr := strings.ReplaceAll(c.PostForm("work_function"), ",", ".")
 
+	area, _ := strconv.ParseFloat(areaStr, 64)
+	efficiency, _ := strconv.ParseFloat(effStr, 64)
+	frequency, _ := strconv.ParseFloat(freqStr, 64)
+	workFunc, _ := strconv.ParseFloat(workFuncStr, 64)
+
+	// СОХРАНЯЕМ В БАЗУ ВСЕ 4 ПОЛЯ!
 	h.repo.GetDB().Model(&ds.CalculationItem{}).Where("id = ?", itemID).Updates(map[string]interface{}{
 		"area":          area,
 		"efficiency":    efficiency,
-		"work_function": workFunc,
 		"frequency":     frequency,
+		"work_function": workFunc,
 	})
+
 	c.Redirect(http.StatusFound, "/radiation_calculation/"+calcIDStr)
 }
 
-// ОТПРАВКА НА МОДЕРАЦИЮ
 func (h *Handler) StatusCalculation(c *gin.Context) {
 	calcIDStr := c.PostForm("calc_id")
 	calcID, err := strconv.Atoi(calcIDStr)
@@ -345,9 +342,7 @@ func (h *Handler) StatusCalculation(c *gin.Context) {
 		return
 	}
 
-	// Обновляем статус заявки на "сформирован" и фиксируем время
 	h.repo.GetDB().Exec("UPDATE radiation_calculations SET status = 'сформирован', formed_at = NOW() WHERE id = ?", calcID)
 
-	// После отправки кидаем пользователя на главную страницу
 	c.Redirect(http.StatusFound, "/")
 }

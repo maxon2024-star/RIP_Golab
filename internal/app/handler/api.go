@@ -13,45 +13,44 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// === ДОМЕН УСЛУГИ ===
+// === ДОМЕН УСЛУГИ (ИЗЛУЧЕНИЯ) ===
 
-func (h *Handler) GetServicesAPI(c *gin.Context) {
+func (h *Handler) GetRadiationsAPI(c *gin.Context) {
 	search := c.Query("search")
-	var services []ds.RadiationRange
+	var radiations []ds.RadiationRange
 
 	db := h.repo.GetDB().Where("is_delete = ?", false)
 	if search != "" {
 		db = db.Where("name ILIKE ?", "%"+search+"%")
 	}
-	db.Find(&services)
+	db.Find(&radiations)
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": services})
+	c.JSON(http.StatusOK, radiations)
 }
 
-func (h *Handler) GetServiceAPI(c *gin.Context) {
+func (h *Handler) GetRadiationAPI(c *gin.Context) {
 	id := c.Param("id")
-	var service ds.RadiationRange
-	if err := h.repo.GetDB().First(&service, "id = ? AND is_delete = false", id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Услуга не найдена"})
+	var radiation ds.RadiationRange
+	if err := h.repo.GetDB().First(&radiation, "id = ? AND is_delete = false", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Излучение не найдено"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": service})
+	c.JSON(http.StatusOK, radiation)
 }
 
-func (h *Handler) AddServiceAPI(c *gin.Context) {
+func (h *Handler) AddRadiationAPI(c *gin.Context) {
 	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка формы"})
 		return
 	}
 
-	service := ds.RadiationRange{
+	radiation := ds.RadiationRange{
 		Name:        c.PostForm("name"),
 		Description: c.PostForm("description"),
 		EnergyRange: c.PostForm("energy_range"),
 		Frequency:   c.PostForm("frequency"),
 	}
 
-	// Сохранение в MinIO
 	uploadToMinio := func(field string) string {
 		file, header, err := c.Request.FormFile(field)
 		if err == nil {
@@ -69,9 +68,8 @@ func (h *Handler) AddServiceAPI(c *gin.Context) {
 			}
 
 			filename := fmt.Sprintf("%s_%d%s", field, time.Now().Unix(), ext)
-			bucket := "physicsservice" // Убедись, что бакет называется именно так в настройках
+			bucket := "physicsservice"
 
-			// РЕАЛЬНАЯ ОТПРАВКА В MINIO
 			_, err = h.repo.GetMinio().PutObject(
 				context.Background(),
 				bucket,
@@ -91,34 +89,44 @@ func (h *Handler) AddServiceAPI(c *gin.Context) {
 		return ""
 	}
 
-	service.ImageURL = uploadToMinio("image")
-	service.VideoURL = uploadToMinio("video")
+	radiation.ImageURL = uploadToMinio("image")
+	radiation.VideoURL = uploadToMinio("video")
 
-	h.repo.GetDB().Create(&service)
-	c.JSON(http.StatusCreated, gin.H{"status": "success", "data": service})
+	h.repo.GetDB().Create(&radiation)
+	c.JSON(http.StatusCreated, radiation)
 }
 
-// === ДОМЕН М-М (ЗАЯВКИ-УСЛУГИ) ===
+// === ДОМЕН М-М (ЭЛЕМЕНТЫ РАСЧЕТА) ===
 
 type M2MInput struct {
 	RadiationID  uint    `json:"radiation_id" binding:"required"`
 	Area         float64 `json:"area"`
 	Efficiency   float64 `json:"efficiency"`
-	WorkFunction float64 `json:"work_function"`
 	Frequency    float64 `json:"frequency"`
+	WorkFunction float64 `json:"work_function"`
 }
 
-func (h *Handler) AddToCartAPI(c *gin.Context) {
+func (h *Handler) AddCalculationItemAPI(c *gin.Context) {
 	var input M2MInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Подгружаем дефолты из справочника, если через API передали 0
+	var rad ds.RadiationRange
+	h.repo.GetDB().First(&rad, input.RadiationID)
+
+	if input.Frequency == 0 {
+		input.Frequency = parseFrequencyStr(rad.Frequency)
+	}
+	if input.WorkFunction == 0 {
+		input.WorkFunction = rad.WorkFunction
+	}
+
 	userID := CurrentUser()
 	var draft ds.RadiationCalculation
 
-	// Если нет черновика, создаем пустой (status='draft', created_at=now)
 	err := h.repo.GetDB().Where("user_id = ? AND status = 'draft'", userID).First(&draft).Error
 	if err != nil {
 		draft = ds.RadiationCalculation{UserID: userID, Status: "draft"}
@@ -130,14 +138,14 @@ func (h *Handler) AddToCartAPI(c *gin.Context) {
 		RadiationID:   input.RadiationID,
 		Area:          input.Area,
 		Efficiency:    input.Efficiency,
-		WorkFunction:  input.WorkFunction,
 		Frequency:     input.Frequency,
+		WorkFunction:  input.WorkFunction,
 	}
 	h.repo.GetDB().Create(&item)
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Добавлено в заявку"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Излучение добавлено в расчет"})
 }
 
-func (h *Handler) UpdateCartAPI(c *gin.Context) {
+func (h *Handler) UpdateCalculationItemAPI(c *gin.Context) {
 	var input M2MInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -150,20 +158,20 @@ func (h *Handler) UpdateCartAPI(c *gin.Context) {
 		return
 	}
 
-	// Изменение без PK M2M - ищем по связи Заявка+Услуга
+	// Обновляем все 4 поля
 	h.repo.GetDB().Model(&ds.CalculationItem{}).
 		Where("calculation_id = ? AND radiation_id = ?", draft.ID, input.RadiationID).
 		Updates(map[string]interface{}{
 			"area":          input.Area,
 			"efficiency":    input.Efficiency,
-			"work_function": input.WorkFunction,
 			"frequency":     input.Frequency,
+			"work_function": input.WorkFunction,
 		})
 
-	c.JSON(http.StatusOK, gin.H{"status": "success"})
+	c.Status(http.StatusOK)
 }
 
-func (h *Handler) DeleteFromCartAPI(c *gin.Context) {
+func (h *Handler) DeleteCalculationItemAPI(c *gin.Context) {
 	radiationID := c.Query("radiation_id")
 
 	var draft ds.RadiationCalculation
@@ -172,14 +180,13 @@ func (h *Handler) DeleteFromCartAPI(c *gin.Context) {
 		return
 	}
 
-	// Удаление без PK M2M
 	h.repo.GetDB().Where("calculation_id = ? AND radiation_id = ?", draft.ID, radiationID).Delete(&ds.CalculationItem{})
-	c.JSON(http.StatusOK, gin.H{"status": "success"})
+	c.Status(http.StatusNoContent)
 }
 
-// === ДОМЕН ЗАЯВКИ ===
+// === ДОМЕН ЗАЯВКИ (РАСЧЕТЫ) ===
 
-func (h *Handler) GetCartIconAPI(c *gin.Context) {
+func (h *Handler) GetDraftSummaryAPI(c *gin.Context) {
 	userID := CurrentUser()
 	var draft ds.RadiationCalculation
 
@@ -190,14 +197,13 @@ func (h *Handler) GetCartIconAPI(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"draft_id": draft.ID, "count": len(draft.Items)})
 }
 
-func (h *Handler) GetRequestsAPI(c *gin.Context) {
+func (h *Handler) GetCalculationsAPI(c *gin.Context) {
 	dateFrom := c.Query("date_from")
 	dateTo := c.Query("date_to")
 	status := c.Query("status")
 
-	var requests []ds.RadiationCalculation
+	var calculations []ds.RadiationCalculation
 
-	// Исключаем удаленные и черновики
 	db := h.repo.GetDB().Preload("User").Preload("Items").
 		Where("status NOT IN ('draft', 'удалён')")
 
@@ -208,14 +214,13 @@ func (h *Handler) GetRequestsAPI(c *gin.Context) {
 		db = db.Where("formed_at BETWEEN ? AND ?", dateFrom, dateTo)
 	}
 
-	db.Find(&requests)
+	db.Find(&calculations)
 
-	// Добавляем вычисляемое поле (количество записей м-м с непустым результатом)
 	var result []map[string]interface{}
-	for _, req := range requests {
+	for _, req := range calculations {
 		validItemsCount := 0
 		for _, item := range req.Items {
-			if item.CalculatedCurrent > 0 { // Проверка "не пустого" результата вычислений
+			if item.CalculatedCurrent > 0 {
 				validItemsCount++
 			}
 		}
@@ -226,25 +231,25 @@ func (h *Handler) GetRequestsAPI(c *gin.Context) {
 			"created_at":          req.CreatedAt,
 			"formed_at":           req.FormedAt,
 			"total_current":       req.TotalCurrent,
-			"creator_login":       req.User.Login,  // поле создателя через логин
-			"valid_results_count": validItemsCount, // вычисляемое поле
+			"creator_login":       req.User.Login,
+			"valid_results_count": validItemsCount,
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": result})
+	c.JSON(http.StatusOK, result)
 }
 
-func (h *Handler) GetRequestAPI(c *gin.Context) {
+func (h *Handler) GetCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var req ds.RadiationCalculation
 	if err := h.repo.GetDB().Preload("Items.Radiation").First(&req, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Заявка не найдена"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": req})
+	c.JSON(http.StatusOK, req)
 }
 
-func (h *Handler) UpdateRequestAPI(c *gin.Context) {
+func (h *Handler) UpdateCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var input struct {
 		Description string `json:"description"`
@@ -255,14 +260,39 @@ func (h *Handler) UpdateRequestAPI(c *gin.Context) {
 	}
 
 	h.repo.GetDB().Model(&ds.RadiationCalculation{}).Where("id = ?", id).Update("description", input.Description)
-	c.JSON(http.StatusOK, gin.H{"status": "success"})
+	c.Status(http.StatusOK)
 }
 
-func (h *Handler) FormRequestAPI(c *gin.Context) {
+func parseFrequencyStr(freqStr string) float64 {
+	if freqStr == "" {
+		return 0
+	}
+	multipliers := map[string]float64{
+		"кГц": 1e3, "МГц": 1e6, "ГГц": 1e9, "ТГц": 1e12, "ПГц": 1e15, "ЭГц": 1e18,
+	}
+	for unit, mult := range multipliers {
+		if strings.Contains(freqStr, unit) {
+			parts := strings.Split(freqStr, "-")
+			targetPart := parts[0]
+			if len(parts) > 1 {
+				targetPart = parts[1]
+			}
+			numStr := strings.TrimSpace(strings.Replace(targetPart, unit, "", 1))
+			numStr = strings.Split(numStr, " ")[0]
+
+			var num float64
+			fmt.Sscanf(numStr, "%f", &num)
+			return num * mult
+		}
+	}
+	return 0
+}
+
+func (h *Handler) FormCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var req ds.RadiationCalculation
 
-	if err := h.repo.GetDB().Preload("Items").First(&req, "id = ? AND status = 'draft'", id).Error; err != nil {
+	if err := h.repo.GetDB().Preload("Items.Radiation").First(&req, "id = ? AND status = 'draft'", id).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Только черновик можно сформировать"})
 		return
 	}
@@ -272,13 +302,13 @@ func (h *Handler) FormRequestAPI(c *gin.Context) {
 		return
 	}
 
-	// === БИЗНЕС-ЛОГИКА: Вычисление формулы физики перенесено сюда по ТЗ ===
 	totalCurrent := 0.0
 	const h_plank = 6.626e-34
 	const e_charge = 1.6e-19
 	const P_density = 100.0
 
 	for i := range req.Items {
+		// ТЕПЕРЬ БЕРЕМ ПАРАМЕТРЫ ИЗ М-М ТАБЛИЦЫ
 		freq := req.Items[i].Frequency
 		workFunc_eV := req.Items[i].WorkFunction
 
@@ -292,10 +322,7 @@ func (h *Handler) FormRequestAPI(c *gin.Context) {
 		workFunc_J := workFunc_eV * e_charge
 		E_k_J := E_photon_J - workFunc_J
 
-		req.Items[i].KineticEnergy = E_k_J / e_charge
-
 		if E_k_J <= 0 {
-			req.Items[i].KineticEnergy = 0
 			req.Items[i].CalculatedCurrent = -1
 			h.repo.GetDB().Save(&req.Items[i])
 			continue
@@ -320,13 +347,13 @@ func (h *Handler) FormRequestAPI(c *gin.Context) {
 		"total_current": totalCurrent,
 	})
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Заявка сформирована", "total_current": totalCurrent})
+	c.JSON(http.StatusOK, gin.H{"message": "Заявка сформирована", "total_current": totalCurrent})
 }
 
-func (h *Handler) CompleteRequestAPI(c *gin.Context) {
+func (h *Handler) CompleteCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var input struct {
-		Action string `json:"action" binding:"required"` // "complete" or "reject"
+		Action string `json:"action" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -353,53 +380,47 @@ func (h *Handler) CompleteRequestAPI(c *gin.Context) {
 		"completed_at": now,
 	})
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "new_status": status})
+	c.JSON(http.StatusOK, gin.H{"new_status": status})
 }
 
-func (h *Handler) DeleteRequestAPI(c *gin.Context) {
+func (h *Handler) DeleteCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	h.repo.GetDB().Model(&ds.RadiationCalculation{}).Where("id = ?", id).Update("status", "удалён")
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Заявка логически удалена"})
+	c.Status(http.StatusNoContent)
 }
 
 // === ДОМЕН ПОЛЬЗОВАТЕЛЬ ===
 
 func (h *Handler) RegisterAPI(c *gin.Context) {
-	// Создаем структуру специально для чтения входящего JSON
 	var input struct {
 		Login       string `json:"login" binding:"required"`
 		Password    string `json:"password" binding:"required"`
 		IsModerator bool   `json:"is_moderator"`
 	}
 
-	// Читаем JSON в структуру input
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Перекладываем данные в модель БД
 	user := ds.User{
 		Login:       input.Login,
 		Password:    input.Password,
 		IsModerator: input.IsModerator,
 	}
 
-	// Сохраняем в базу
 	if err := h.repo.GetDB().Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка регистрации"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"status": "success", "data": user})
+	c.JSON(http.StatusCreated, user)
 }
 
 func (h *Handler) LoginAPI(c *gin.Context) {
-	// Заглушка для 4ой лабораторной
-	c.JSON(http.StatusOK, gin.H{"status": "success", "token": "dummy_jwt_token_here"})
+	c.JSON(http.StatusOK, gin.H{"token": "dummy_jwt_token_here"})
 }
 
 func (h *Handler) LogoutAPI(c *gin.Context) {
-	// Заглушка для 4ой лабораторной
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Деавторизация успешна"})
+	c.Status(http.StatusOK)
 }
