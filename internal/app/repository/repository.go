@@ -2,16 +2,19 @@ package repository
 
 import (
 	"context"
+	"log"
+
+	"github.com/go-redis/redis/v8"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
 )
 
 type Repository struct {
 	db              *gorm.DB
 	minio           *minio.Client
+	redis           *redis.Client
 	minioBucketName string
 }
 
@@ -47,9 +50,20 @@ func New(settings *RepositorySettings) (*Repository, error) {
 		}
 	}
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379", // из docker-compose
+		Password: "password",       // из docker-compose
+		DB:       0,
+	})
+
+	if err := redisClient.Ping(context.Background()).Err(); err != nil {
+		return nil, err
+	}
+
 	return &Repository{
 		db:              db,
 		minio:           minioClient,
+		redis:           redisClient,
 		minioBucketName: settings.MinioBucketName,
 	}, nil
 }
@@ -60,4 +74,8 @@ func (r *Repository) GetDB() *gorm.DB {
 
 func (r *Repository) GetMinio() *minio.Client {
 	return r.minio
+}
+
+func (r *Repository) GetRedis() *redis.Client {
+	return r.redis
 }

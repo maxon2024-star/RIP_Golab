@@ -1,0 +1,467 @@
+basePath: /
+definitions:
+  RIP_Golab_internal_app_ds.CalculationItem:
+    properties:
+      area:
+        description: Площадь (вводится юзером)
+        type: number
+      calculated_current:
+        description: Рассчитывается
+        type: number
+      calculation_id:
+        type: integer
+      efficiency:
+        description: КПД (вводится юзером)
+        type: number
+      frequency:
+        description: Частота (вводится юзером)
+        type: number
+      id:
+        type: integer
+      kinetic_energy:
+        description: Рассчитывается
+        type: number
+      radiation:
+        $ref: '#/definitions/RIP_Golab_internal_app_ds.RadiationRange'
+      radiation_id:
+        type: integer
+      work_function:
+        description: Энергия выхода (вводится юзером)
+        type: number
+    type: object
+  RIP_Golab_internal_app_ds.Physicist:
+    properties:
+      id:
+        type: integer
+      login:
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/RIP_Golab_internal_app_role.Role'
+        description: 1 - Физик, 2 - Профессор
+    type: object
+  RIP_Golab_internal_app_ds.RadiationCalculation:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      formed_at:
+        type: string
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/RIP_Golab_internal_app_ds.CalculationItem'
+        type: array
+      physicist:
+        $ref: '#/definitions/RIP_Golab_internal_app_ds.Physicist'
+      physicist_id:
+        type: integer
+      professor_id:
+        type: integer
+      status:
+        type: string
+      total_current:
+        type: number
+    type: object
+  RIP_Golab_internal_app_ds.RadiationRange:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_delete:
+        type: boolean
+      name:
+        type: string
+      video_url:
+        type: string
+    type: object
+  RIP_Golab_internal_app_role.Role:
+    enum:
+    - 0
+    - 1
+    - 2
+    type: integer
+    x-enum-comments:
+      Physicist: Обычный физик
+      Professor: Профессор
+    x-enum-descriptions:
+    - ""
+    - Обычный физик
+    - Профессор
+    x-enum-varnames:
+    - Guest
+    - Physicist
+    - Professor
+  internal_app_handler.M2MInput:
+    properties:
+      area:
+        type: number
+      efficiency:
+        type: number
+      frequency:
+        type: number
+      radiation_id:
+        type: integer
+      work_function:
+        type: number
+    required:
+    - radiation_id
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: API сервера для расчета фотоэффекта
+  title: RIP Golab Photoeffect API
+  version: "1.0"
+paths:
+  /api/calculation-items:
+    delete:
+      parameters:
+      - description: ID Излучения
+        in: query
+        name: radiation_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно удалено
+      security:
+      - BearerAuth: []
+      summary: Удаление элемента из корзины
+      tags:
+      - Корзина
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Параметры эксперимента
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_app_handler.M2MInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Добавление излучения в корзину (черновик)
+      tags:
+      - Корзина
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Новые параметры
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_app_handler.M2MInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешно
+      security:
+      - BearerAuth: []
+      summary: Обновление элемента в корзине
+      tags:
+      - Корзина
+  /api/calculations:
+    get:
+      parameters:
+      - description: Фильтр по статусу
+        in: query
+        name: status
+        type: string
+      - description: Дата от (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата до (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Список всех сформированных заявок (с фильтрами)
+      tags:
+      - Заявки
+  /api/calculations/{id}:
+    delete:
+      parameters:
+      - description: ID Заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно
+      security:
+      - BearerAuth: []
+      summary: Логическое удаление заявки
+      tags:
+      - Заявки
+    get:
+      parameters:
+      - description: ID Заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/RIP_Golab_internal_app_ds.RadiationCalculation'
+      security:
+      - BearerAuth: []
+      summary: Получение заявки по ID
+      tags:
+      - Заявки
+    put:
+      parameters:
+      - description: ID Заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Описание
+        in: body
+        name: input
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      responses:
+        "200":
+          description: Успешно
+      security:
+      - BearerAuth: []
+      summary: Изменение описания заявки
+      tags:
+      - Заявки
+  /api/calculations/{id}/complete:
+    put:
+      description: Доступно только Профессору
+      parameters:
+      - description: ID Заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 'Action: accept / reject'
+        in: body
+        name: input
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Завершение или отклонение заявки
+      tags:
+      - Заявки
+  /api/calculations/{id}/form:
+    put:
+      description: Переводит заявку из draft в сформирован и считает формулы
+      parameters:
+      - description: ID Заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Сформировать заявку (запуск расчетов)
+      tags:
+      - Заявки
+  /api/calculations/draft-summary:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Получение иконки корзины (сводка черновика)
+      tags:
+      - Заявки
+  /api/radiations:
+    get:
+      description: Возвращает список всех излучений из каталога
+      parameters:
+      - description: Поиск по названию
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/RIP_Golab_internal_app_ds.RadiationRange'
+            type: array
+      summary: Получение всех услуг
+      tags:
+      - Услуги
+    post:
+      consumes:
+      - multipart/form-data
+      description: Доступно только Профессору
+      parameters:
+      - description: Название
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Описание
+        in: formData
+        name: description
+        type: string
+      - description: Изображение
+        in: formData
+        name: image
+        type: file
+      - description: Видео
+        in: formData
+        name: video
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/RIP_Golab_internal_app_ds.RadiationRange'
+      security:
+      - BearerAuth: []
+      summary: Добавление новой услуги
+      tags:
+      - Услуги
+  /api/radiations/{id}:
+    get:
+      parameters:
+      - description: ID Излучения
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/RIP_Golab_internal_app_ds.RadiationRange'
+      summary: Получение услуги по ID
+      tags:
+      - Услуги
+  /api/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Выдает JWT токен в случае успешной авторизации
+      parameters:
+      - description: Креды (login, password)
+        in: body
+        name: input
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Авторизация (Login)
+      tags:
+      - Пользователи
+  /api/users/logout:
+    post:
+      description: Помещает переданный JWT в Blacklist Redis'а
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Выход (Logout)
+      tags:
+      - Пользователи
+  /api/users/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные регистрации
+        in: body
+        name: input
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/RIP_Golab_internal_app_ds.Physicist'
+      summary: Регистрация пользователя
+      tags:
+      - Пользователи
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

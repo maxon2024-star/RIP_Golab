@@ -3,12 +3,16 @@ package handler
 import (
 	"RIP_Golab/internal/app/ds"
 	"RIP_Golab/internal/app/repository"
+	"RIP_Golab/internal/app/role"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Handler struct {
@@ -18,9 +22,6 @@ type Handler struct {
 func NewHandler(repo *repository.Repository) *Handler {
 	return &Handler{repo: repo}
 }
-
-func CurrentUser() uint      { return 1 }
-func CurrentModerator() uint { return 2 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/", h.GetServiceList)
@@ -35,27 +36,41 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	router.POST("/status-calculation", h.StatusCalculation)
 
+	// Swagger Route
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	api := router.Group("/api")
 	{
+		// Общедоступные (Guest)
 		api.GET("/radiations", h.GetRadiationsAPI)
 		api.GET("/radiations/:id", h.GetRadiationAPI)
-		api.POST("/radiations", h.AddRadiationAPI)
-
-		api.POST("/calculation-items", h.AddCalculationItemAPI)
-		api.PUT("/calculation-items", h.UpdateCalculationItemAPI)
-		api.DELETE("/calculation-items", h.DeleteCalculationItemAPI)
-
-		api.GET("/calculations/draft-summary", h.GetDraftSummaryAPI)
-		api.GET("/calculations", h.GetCalculationsAPI)
-		api.GET("/calculations/:id", h.GetCalculationAPI)
-		api.PUT("/calculations/:id", h.UpdateCalculationAPI)
-		api.PUT("/calculations/:id/form", h.FormCalculationAPI)
-		api.PUT("/calculations/:id/complete", h.CompleteCalculationAPI)
-		api.DELETE("/calculations/:id", h.DeleteCalculationAPI)
-
 		api.POST("/users/register", h.RegisterAPI)
 		api.POST("/users/login", h.LoginAPI)
-		api.POST("/users/logout", h.LogoutAPI)
+
+		// Доступ для Физиков (авторизованные пользователи)
+		authGroup := api.Group("/")
+		authGroup.Use(h.WithAuthCheck(role.Physicist))
+		{
+			authGroup.POST("/users/logout", h.LogoutAPI)
+			authGroup.POST("/calculation-items", h.AddCalculationItemAPI)
+			authGroup.PUT("/calculation-items", h.UpdateCalculationItemAPI)
+			authGroup.DELETE("/calculation-items", h.DeleteCalculationItemAPI)
+
+			authGroup.GET("/calculations/draft-summary", h.GetDraftSummaryAPI)
+			authGroup.GET("/calculations", h.GetCalculationsAPI)
+			authGroup.GET("/calculations/:id", h.GetCalculationAPI)
+			authGroup.PUT("/calculations/:id", h.UpdateCalculationAPI)
+			authGroup.PUT("/calculations/:id/form", h.FormCalculationAPI)
+			authGroup.DELETE("/calculations/:id", h.DeleteCalculationAPI)
+		}
+
+		// Доступ только для Профессоров (модераторы)
+		profGroup := api.Group("/")
+		profGroup.Use(h.WithAuthCheck(role.Professor))
+		{
+			profGroup.POST("/radiations", h.AddRadiationAPI)
+			profGroup.PUT("/calculations/:id/complete", h.CompleteCalculationAPI)
+		}
 	}
 }
 
@@ -70,8 +85,13 @@ func (h *Handler) errorHandler(ctx *gin.Context, statusCode int, err error) {
 	ctx.Redirect(http.StatusFound, "/")
 }
 
-func (h *Handler) getUserID(c *gin.Context) uint {
-	return CurrentUser()
+// Для старых HTML-шаблонов возвращаем ID физика, если он есть, иначе отдаем 1 (заглушка)
+func (h *Handler) getHTMLPhysicistID(c *gin.Context) uint {
+	id := h.getPhysicistID(c)
+	if id == 0 {
+		return 1 // Хардкод fallback для старых HTML-страниц без JWT
+	}
+	return id
 }
 
 func (h *Handler) GetServiceList(c *gin.Context) {
@@ -90,11 +110,11 @@ func (h *Handler) GetServiceList(c *gin.Context) {
 		return
 	}
 
-	userID := h.getUserID(c)
-	count := h.repo.GetCalculationItemCount(userID)
+	physicistID := h.getHTMLPhysicistID(c)
+	count := h.repo.GetCalculationItemCount(physicistID)
 
 	var draftID uint = 0
-	draft, err := h.repo.GetCalculationByUserID(userID)
+	draft, err := h.repo.GetCalculationByPhysicistID(physicistID)
 	if err == nil && draft != nil {
 		draftID = draft.ID
 	}
@@ -128,11 +148,11 @@ func (h *Handler) GetServiceDetail(c *gin.Context) {
 		videoURL = strings.Replace(videoURL, ".png", ".mp4", 1)
 	}
 
-	userID := h.getUserID(c)
-	count := h.repo.GetCalculationItemCount(userID)
+	physicistID := h.getHTMLPhysicistID(c)
+	count := h.repo.GetCalculationItemCount(physicistID)
 
 	var draftID uint = 0
-	draft, err := h.repo.GetCalculationByUserID(userID)
+	draft, err := h.repo.GetCalculationByPhysicistID(physicistID)
 	if err == nil && draft != nil {
 		draftID = draft.ID
 	}
@@ -161,7 +181,6 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 	const P_density = 100.0
 
 	for i := range request.Items {
-		// ТЕПЕРЬ МЫ БЕРЕМ ЗНАЧЕНИЯ ПРЯМО ИЗ БАЗЫ ДАННЫХ, А НЕ ИЗ КАТАЛОГА!
 		freq := request.Items[i].Frequency
 		workFunc_eV := request.Items[i].WorkFunction
 
@@ -200,7 +219,7 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "request.html", gin.H{
 		"request":      request,
-		"count":        h.repo.GetCalculationItemCount(h.getUserID(c)),
+		"count":        h.repo.GetCalculationItemCount(h.getHTMLPhysicistID(c)),
 		"totalCurrent": totalCurrent,
 	})
 }
@@ -226,21 +245,18 @@ func (h *Handler) AddToCalculation(c *gin.Context) {
 	frequency, _ := strconv.ParseFloat(freqStr, 64)
 	workFunc, _ := strconv.ParseFloat(workFuncStr, 64)
 
-	// Берем дефолты из справочника, только если чувак оставил поля пустыми (при создании)
-	var rad ds.RadiationRange
-	h.repo.GetDB().First(&rad, serviceID)
-
+	// Подставляем дефолтные значения для старых HTML-форм, если юзер не ввел параметры
 	if frequency == 0 {
-		frequency = parseFrequency(rad.Frequency)
+		frequency = 1e15
 	}
 	if workFunc == 0 {
-		workFunc = rad.WorkFunction
+		workFunc = 4.5
 	}
 
-	userID := h.getUserID(c)
-	request, err := h.repo.GetCalculationByUserID(userID)
+	physicistID := h.getHTMLPhysicistID(c)
+	request, err := h.repo.GetCalculationByPhysicistID(physicistID)
 	if err != nil {
-		request = &ds.RadiationCalculation{UserID: userID, Status: "draft"}
+		request = &ds.RadiationCalculation{PhysicistID: physicistID, Status: "draft"}
 		h.repo.CreateCalculation(request)
 	}
 
@@ -271,37 +287,6 @@ func (h *Handler) DeleteCalculation(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/")
 }
 
-func parseFrequency(freqStr string) float64 {
-	if freqStr == "" {
-		return 0
-	}
-	multipliers := map[string]float64{
-		"кГц": 1e3, "МГц": 1e6, "ГГц": 1e9, "ТГц": 1e12, "ПГц": 1e15, "ЭГц": 1e18,
-	}
-	for unit, mult := range multipliers {
-		if strings.Contains(freqStr, unit) {
-			parts := strings.Split(freqStr, " ")
-			for _, part := range parts {
-				if strings.Contains(part, unit) {
-					numStr := strings.Replace(part, unit, "", 1)
-					numStr = strings.TrimSpace(numStr)
-
-					if strings.Contains(freqStr, "-") {
-						parts := strings.Split(freqStr, "-")
-						if len(parts) == 2 {
-							numStr = strings.TrimSpace(parts[1])
-							numStr = strings.Replace(numStr, unit, "", 1)
-						}
-					}
-					num, _ := strconv.ParseFloat(numStr, 64)
-					return num * mult
-				}
-			}
-		}
-	}
-	return 0
-}
-
 func (h *Handler) DeleteItem(c *gin.Context) {
 	itemID, _ := strconv.Atoi(c.PostForm("item_id"))
 	calcIDStr := c.PostForm("calc_id")
@@ -323,7 +308,6 @@ func (h *Handler) UpdateItem(c *gin.Context) {
 	frequency, _ := strconv.ParseFloat(freqStr, 64)
 	workFunc, _ := strconv.ParseFloat(workFuncStr, 64)
 
-	// СОХРАНЯЕМ В БАЗУ ВСЕ 4 ПОЛЯ!
 	h.repo.GetDB().Model(&ds.CalculationItem{}).Where("id = ?", itemID).Updates(map[string]interface{}{
 		"area":          area,
 		"efficiency":    efficiency,
