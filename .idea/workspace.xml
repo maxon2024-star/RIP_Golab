@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="full working lab4">
+    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="fix swagger + front">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/service_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/service_detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/services.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/services.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -146,6 +144,7 @@
     <MESSAGE value="full working lab3" />
     <MESSAGE value="full working lab3 changes" />
     <MESSAGE value="full working lab4" />
-    <option name="LAST_COMMIT_MESSAGE" value="full working lab4" />
+    <MESSAGE value="fix swagger + front" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix swagger + front" />
   </component>
 </project>

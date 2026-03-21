@@ -22,7 +22,6 @@
         {{if .request.Items}}
         <div class="cart-table-wrapper">
             <div class="cart-table-inner">
-                <!-- Заголовок таблицы: 9 колонок -->
                 <div class="table-header">
                     <div>Фото</div>
                     <div>Диапазон</div>
@@ -38,36 +37,29 @@
                 <div class="items-container">
                     {{range .request.Items}}
                     <div class="item-card">
-                        <!-- Строка товара: 9 колонок -->
                         <div class="item-grid">
                             <div><img src="{{.Radiation.ImageURL}}" class="item-image" onerror="this.src='https://via.placeholder.com/60'"></div>
 
                             <div>
                                 <div style="font-weight: 700; color: var(--text-primary); font-size: 1rem;">{{.Radiation.Name}}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">По умолч: {{.Radiation.Frequency}}</div>
                             </div>
 
-                            <!-- Частота -->
                             <div>
                                 <input type="number" name="frequency" value="{{.Frequency}}" step="any" form="update-form-{{.ID}}" class="table-input" required>
                             </div>
 
-                            <!-- Работа выхода -->
                             <div>
                                 <input type="number" name="work_function" value="{{.WorkFunction}}" step="any" form="update-form-{{.ID}}" class="table-input" required>
                             </div>
 
-                            <!-- Площадь -->
                             <div>
                                 <input type="number" name="area" value="{{.Area}}" step="0.1" form="update-form-{{.ID}}" class="table-input" required>
                             </div>
 
-                            <!-- КПД -->
                             <div>
                                 <input type="number" name="efficiency" value="{{.Efficiency}}" step="0.1" form="update-form-{{.ID}}" class="table-input" required>
                             </div>
 
-                            <!-- Кинетическая энергия (Eк) -->
                             <div style="font-weight: bold; color: var(--primary);">
                                 {{if gt .KineticEnergy 0.0}}
                                 {{printf "%.2f" .KineticEnergy}}
@@ -76,7 +68,6 @@
                                 {{end}}
                             </div>
 
-                            <!-- Ток (с обработкой ошибок) -->
                             <div class="result-value">
                                 {{if lt .CalculatedCurrent 0.0}}
                                 {{if eq .CalculatedCurrent -1.0}}
@@ -89,7 +80,6 @@
                                 {{end}}
                             </div>
 
-                            <!-- Кнопки действий -->
                             <div style="display: flex; gap: 8px; justify-content: center;">
                                 <form id="update-form-{{.ID}}" action="/update-item" method="POST" style="margin: 0;">
                                     <input type="hidden" name="item_id" value="{{.ID}}">
@@ -128,7 +118,7 @@
         <div class="empty-cart">
             <i>🛒</i>
             <p>Ваша заявка пока пуста. Добавьте диапазоны излучения из каталога.</p>
-            <a href="/" class="electric-btn">Перейти в каталог</a>
+            <a href="/" class="btn-details" style="display: inline-block; margin-top: 15px;">Перейти в каталог</a>
         </div>
         {{end}}
     </main>
