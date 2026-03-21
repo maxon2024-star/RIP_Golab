@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "RIP_Golab/docs"
 	"RIP_Golab/internal/app/config"
 	"RIP_Golab/internal/app/dsn"
 	"RIP_Golab/internal/app/handler"

@@ -4,22 +4,11 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="full working lab3 changes">
-      <change afterPath="$PROJECT_DIR$/internal/app/handler/auth_mw.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/app/role/role.go" afterDir="false" />
+    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="full working lab4">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/migrate/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/migrate/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/calculation_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/calculation_item.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/radiation_calculation.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/radiation_calculation.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/ds/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/physicist.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/handler/api.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/handler/api.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/handler/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/repository/radiation_calculation.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/repository/radiation_calculation.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/repository/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/repository/repository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/service_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/service_detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/services.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/services.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +57,7 @@
   "keyToString": {
     "DefaultGoTemplateProperty": "Go File",
     "DefaultHtmlFileTemplate": "HTML File",
+    "JavaScript Debug.services.html.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.GoLinterPluginOnboardingV2": "true",
     "RunOnceActivity.GoLinterPluginStorageMigration": "true",
@@ -88,6 +78,16 @@
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\MaxZ\GolandProjects\RIP_Golab1\internal" />
     </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="services.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:56359/RIP_Golab1/templates/services.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JavaScript Debug.services.html" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -145,6 +145,7 @@
     <MESSAGE value="deleted extra icons" />
     <MESSAGE value="full working lab3" />
     <MESSAGE value="full working lab3 changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="full working lab3 changes" />
+    <MESSAGE value="full working lab4" />
+    <option name="LAST_COMMIT_MESSAGE" value="full working lab4" />
   </component>
 </project>

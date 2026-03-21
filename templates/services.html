@@ -35,7 +35,7 @@
             <div class="service-card">
                 <div class="card-image-wrapper">
                     <img src="{{.ImageURL}}" alt="{{.Name}}" class="card-image" onerror="this.src='https://via.placeholder.com/400x250?text=No+Image'">
-                    <div class="badge-energy">{{.EnergyRange}}</div>
+                    <div class="badge-description">{{.Description}}</div>
                     <div class="card-overlay">
                         <a href="/service/{{.ID}}" class="btn-details">👁️ Подробнее</a>
                     </div>
@@ -46,8 +46,7 @@
                     <div class="card-specs">
                         <div class="spec-item">
                             <span class="spec-icon" style="color:var(--primary)">⚡</span>
-                            <span>{{.Frequency}}</span>
-                        </div>
+                            <div class="badge-description">{{.Description}}</div>                        </div>
                     </div>
 
                     <form action="/add-to-calculation" method="POST">
