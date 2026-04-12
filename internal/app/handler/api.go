@@ -220,14 +220,19 @@ func (h *Handler) DeleteCalculationItemAPI(c *gin.Context) {
 
 // @Summary Получение иконки корзины (сводка черновика)
 // @Tags Заявки
-// @Security BearerAuth
 // @Produce json
 // @Success 200 {object} map[string]interface{}
 // @Router /api/calculations/draft-summary [get]
 func (h *Handler) GetDraftSummaryAPI(c *gin.Context) {
 	physicistID := h.getPhysicistID(c)
-	var draft ds.RadiationCalculation
 
+	// Если пользователь не авторизован (нет ID), возвращаем пустую корзину (статус 200)
+	if physicistID == 0 {
+		c.JSON(http.StatusOK, gin.H{"draft_id": nil, "count": 0})
+		return
+	}
+
+	var draft ds.RadiationCalculation
 	if err := h.repo.GetDB().Preload("Items").Where("physicist_id = ? AND status = 'draft'", physicistID).First(&draft).Error; err != nil {
 		c.JSON(http.StatusOK, gin.H{"draft_id": nil, "count": 0})
 		return
