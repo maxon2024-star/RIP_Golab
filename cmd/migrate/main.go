@@ -37,7 +37,6 @@ func main() {
 	}
 	log.Println("✅ Миграции выполнены!")
 
-	// Строку с ALTER TABLE убрали, GORM сам создаст индекс из тега уникальности
 	SeedTestData(db)
 }
 
@@ -57,31 +56,42 @@ func SeedTestData(db *gorm.DB) {
 	var count int64
 	db.Model(&ds.RadiationRange{}).Count(&count)
 	if count == 0 {
-		// ДОБАВИЛИ поле WorkFunction для каждой услуги
+		// ShortDescription содержит английский текст для нейросети CLIP
+		// Description содержит длинное русское описание для вывода в карточках
 		ranges := []ds.RadiationRange{
 			{
-				Name: "Радиоволны", Description: "Диапазон ЭМИ",
-				ImageURL: "http://localhost:9000/physicsservice/radio.jpg", VideoURL: "http://localhost:9000/physicsservice/radio.mp4",
+				Name:             "Радиоволны",
+				ShortDescription: "Electromagnetic waves with the longest wavelengths, used for long-distance radio communication.",
+				Description:      "Диапазон ЭМИ, применяемый для связи и радаров. Имеет самую большую длину волны.",
+				ImageURL:         "http://localhost:9000/physicsservice/radio.jpg", VideoURL: "http://localhost:9000/physicsservice/radio.mp4",
 				IsDelete: false,
 			},
 			{
-				Name: "Инфракрасное излучение", Description: "Тепловое излучение объектов",
-				ImageURL: "http://localhost:9000/physicsservice/infrared.jpg", VideoURL: "http://localhost:9000/physicsservice/infrared.mp4",
+				Name:             "Инфракрасное излучение",
+				ShortDescription: "Invisible radiant energy, electromagnetic radiation with longer wavelengths than visible light.",
+				Description:      "Тепловое излучение объектов, невидимое для глаза, но ощущаемое как тепло.",
+				ImageURL:         "http://localhost:9000/physicsservice/infrared.jpg", VideoURL: "http://localhost:9000/physicsservice/infrared.mp4",
 				IsDelete: false,
 			},
 			{
-				Name: "Видимый свет", Description: "Базовое видимое отраженное излучение объектов",
-				ImageURL: "http://localhost:9000/physicsservice/visible.jpg", VideoURL: "http://localhost:9000/physicsservice/visible.mp4",
+				Name:             "Видимый свет",
+				ShortDescription: "The portion of the electromagnetic spectrum that is visible to the human eye, enabling human sight.",
+				Description:      "Базовое видимое отраженное излучение объектов, воспринимаемое человеческим глазом.",
+				ImageURL:         "http://localhost:9000/physicsservice/visible.jpg", VideoURL: "http://localhost:9000/physicsservice/visible.mp4",
 				IsDelete: false,
 			},
 			{
-				Name: "Ультрафиолет", Description: "Невидимая часть солнечного спектра",
-				ImageURL: "http://localhost:9000/physicsservice/uv.jpg", VideoURL: "http://localhost:9000/physicsservice/uv.mp4",
+				Name:             "Ультрафиолет",
+				ShortDescription: "Invisible electromagnetic radiation emitted by the sun, responsible for summer tans and sunburns.",
+				Description:      "Невидимая часть солнечного спектра, вызывающая флуоресценцию и используемая в медицине.",
+				ImageURL:         "http://localhost:9000/physicsservice/uv.jpg", VideoURL: "http://localhost:9000/physicsservice/uv.mp4",
 				IsDelete: false,
 			},
 			{
-				Name: "Рентген", Description: "Самые высокоэнергетичные частицы",
-				ImageURL: "http://localhost:9000/physicsservice/xray.jpg", VideoURL: "http://localhost:9000/physicsservice/xray.mp4",
+				Name:             "Рентген",
+				ShortDescription: "High-energy electromagnetic radiation capable of passing through many materials, used in medicine.",
+				Description:      "Самые высокоэнергетичные частицы для глубокого сканирования материалов и медицинских исследований.",
+				ImageURL:         "http://localhost:9000/physicsservice/xray.jpg", VideoURL: "http://localhost:9000/physicsservice/xray.mp4",
 				IsDelete: false,
 			},
 		}

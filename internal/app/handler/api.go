@@ -62,6 +62,7 @@ func (h *Handler) GetRadiationAPI(c *gin.Context) {
 // @Accept multipart/form-data
 // @Produce json
 // @Param name formData string true "Название"
+// @Param short_description formData string false "Краткое описание"
 // @Param description formData string false "Описание"
 // @Param image formData file false "Изображение"
 // @Param video formData file false "Видео"
@@ -74,8 +75,9 @@ func (h *Handler) AddRadiationAPI(c *gin.Context) {
 	}
 
 	radiation := ds.RadiationRange{
-		Name:        c.PostForm("name"),
-		Description: c.PostForm("description"),
+		Name:             c.PostForm("name"),
+		ShortDescription: c.PostForm("short_description"), // Обработка нового поля
+		Description:      c.PostForm("description"),
 	}
 
 	uploadToMinio := func(field string) string {

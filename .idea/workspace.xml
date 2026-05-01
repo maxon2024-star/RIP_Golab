@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="fix swagger + front">
+    <list default="true" id="335ad535-4940-4383-9af4-242dbbe9aaea" name="Changes" comment="lab6 working">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/migrate/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/migrate/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/ds/radiation_range.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/app/handler/api.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/handler/api.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -25,7 +27,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="rest-api-integration" />
+        <entry key="$PROJECT_DIR$" value="finalizing-backend-for-SPA" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -43,10 +45,10 @@
     &quot;accountId&quot;: &quot;8335d07c-f7e6-4a2e-9c53-721b737ec8dd&quot;
   }
 }</component>
-  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
-  <component name="KubernetesApiProvider"><![CDATA[{
-  "isMigrated": true
-}]]></component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -70,7 +72,7 @@
     &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;finalizing-backend-for-SPA&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;CLIP-Backend-front-integration&quot;,
     &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/MaxZ&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;
@@ -149,6 +151,7 @@
     <MESSAGE value="full working lab3 changes" />
     <MESSAGE value="full working lab4" />
     <MESSAGE value="fix swagger + front" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix swagger + front" />
+    <MESSAGE value="lab6 working" />
+    <option name="LAST_COMMIT_MESSAGE" value="lab6 working" />
   </component>
 </project>
