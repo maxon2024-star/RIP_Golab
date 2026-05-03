@@ -24,6 +24,8 @@ func NewHandler(repo *repository.Repository) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
+	router.Use(CORSMiddleware())
+
 	router.GET("/", h.GetServiceList)
 	router.GET("/service/:id", h.GetServiceDetail)
 	router.GET("/radiation_calculation/:id", h.GetCalculationByID)
@@ -329,4 +331,24 @@ func (h *Handler) StatusCalculation(c *gin.Context) {
 	h.repo.GetDB().Exec("UPDATE radiation_calculations SET status = 'сформирован', formed_at = NOW() WHERE id = ?", calcID)
 
 	c.Redirect(http.StatusFound, "/")
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Разрешаем запросы с любых адресов
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		// Разрешаем нужные заголовки
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		// Разрешаем методы, включая OPTIONS!
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+
+		// Если это предварительный запрос браузера (OPTIONS) - просто отвечаем 204 и не пускаем дальше
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }
