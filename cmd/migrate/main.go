@@ -3,12 +3,21 @@ package main
 import (
 	"RIP_Golab/internal/app/ds"
 	"RIP_Golab/internal/app/dsn"
+	"crypto/sha1"
+	"encoding/hex"
 	"log"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+// Функция хэширования, идентичная той, что используется в handler
+func hashPassword(pass string) string {
+	h := sha1.New()
+	h.Write([]byte(pass))
+	return hex.EncodeToString(h.Sum(nil))
+}
 
 func main() {
 	_ = godotenv.Load()
@@ -18,13 +27,14 @@ func main() {
 		log.Fatal("❌ Error connecting to database:", err)
 	}
 
-	// Очищаем БД от старых таблиц принудительно (добавили calculation_items)
+	// Очищаем БД от старых таблиц принудительно
 	db.Exec("DROP TABLE IF EXISTS request_items CASCADE")
 	db.Exec("DROP TABLE IF EXISTS experiment_requests CASCADE")
 	db.Exec("DROP TABLE IF EXISTS calculation_items CASCADE")
 	db.Exec("DROP TABLE IF EXISTS radiation_calculations CASCADE")
 	db.Exec("DROP TABLE IF EXISTS radiation_ranges CASCADE")
 	db.Exec("DROP TABLE IF EXISTS users CASCADE")
+	db.Exec("DROP TABLE IF EXISTS physicists CASCADE") // На случай, если GORM назвал таблицу так
 
 	err = db.AutoMigrate(
 		&ds.Physicist{},
@@ -44,13 +54,15 @@ func SeedTestData(db *gorm.DB) {
 	var userCount int64
 	db.Model(&ds.Physicist{}).Count(&userCount)
 	if userCount == 0 {
+		// Обязательно хэшируем пароли перед вставкой в БД!
 		users := []ds.Physicist{
-			{Login: "user", Password: "user", Role: 1},
-			{Login: "admin", Password: "admin", Role: 2},
+			{Login: "user", Password: hashPassword("user"), Role: 1},   // 1 - Обычный физик
+			{Login: "admin", Password: hashPassword("admin"), Role: 2}, // 2 - Профессор (модератор)
 		}
 		for _, u := range users {
 			db.Create(&u)
 		}
+		log.Println("✅ Тестовые пользователи (user, admin) добавлены!")
 	}
 
 	var count int64

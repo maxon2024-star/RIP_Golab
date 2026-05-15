@@ -20,12 +20,6 @@ import (
 // === ДОМЕН УСЛУГИ (ИЗЛУЧЕНИЯ) ===
 
 // @Summary Получение всех услуг
-// @Description Возвращает список всех излучений из каталога
-// @Tags Услуги
-// @Produce json
-// @Param search query string false "Поиск по названию"
-// @Success 200 {array} ds.RadiationRange
-// @Router /api/radiations [get]
 func (h *Handler) GetRadiationsAPI(c *gin.Context) {
 	search := c.Query("search")
 	var radiations []ds.RadiationRange
@@ -40,11 +34,6 @@ func (h *Handler) GetRadiationsAPI(c *gin.Context) {
 }
 
 // @Summary Получение услуги по ID
-// @Tags Услуги
-// @Produce json
-// @Param id path int true "ID Излучения"
-// @Success 200 {object} ds.RadiationRange
-// @Router /api/radiations/{id} [get]
 func (h *Handler) GetRadiationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var radiation ds.RadiationRange
@@ -56,18 +45,6 @@ func (h *Handler) GetRadiationAPI(c *gin.Context) {
 }
 
 // @Summary Добавление новой услуги
-// @Description Доступно только Профессору
-// @Tags Услуги
-// @Security BearerAuth
-// @Accept multipart/form-data
-// @Produce json
-// @Param name formData string true "Название"
-// @Param short_description formData string false "Краткое описание"
-// @Param description formData string false "Описание"
-// @Param image formData file false "Изображение"
-// @Param video formData file false "Видео"
-// @Success 201 {object} ds.RadiationRange
-// @Router /api/radiations [post]
 func (h *Handler) AddRadiationAPI(c *gin.Context) {
 	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка формы"})
@@ -76,7 +53,7 @@ func (h *Handler) AddRadiationAPI(c *gin.Context) {
 
 	radiation := ds.RadiationRange{
 		Name:             c.PostForm("name"),
-		ShortDescription: c.PostForm("short_description"), // Обработка нового поля
+		ShortDescription: c.PostForm("short_description"),
 		Description:      c.PostForm("description"),
 	}
 
@@ -123,16 +100,10 @@ type M2MInput struct {
 	Efficiency   float64 `json:"efficiency"`
 	Frequency    float64 `json:"frequency"`
 	WorkFunction float64 `json:"work_function"`
+	IsPriority   bool    `json:"is_priority"` // <--- ИМЕННО ЗДЕСЬ ДОЛЖНА БЫТЬ ГАЛОЧКА!
 }
 
 // @Summary Добавление излучения в корзину (черновик)
-// @Tags Корзина
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param input body M2MInput true "Параметры эксперимента"
-// @Success 201 {object} map[string]string
-// @Router /api/calculation-items [post]
 func (h *Handler) AddCalculationItemAPI(c *gin.Context) {
 	var input M2MInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -140,7 +111,6 @@ func (h *Handler) AddCalculationItemAPI(c *gin.Context) {
 		return
 	}
 
-	// Валидация: проверяем, что пользователь передал частоту и работу выхода
 	if input.Frequency <= 0 || input.WorkFunction <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Необходимо указать частоту (>0) и работу выхода (>0)"})
 		return
@@ -162,19 +132,13 @@ func (h *Handler) AddCalculationItemAPI(c *gin.Context) {
 		Efficiency:    input.Efficiency,
 		Frequency:     input.Frequency,
 		WorkFunction:  input.WorkFunction,
+		IsPriority:    input.IsPriority, // Сохраняем галочку
 	}
 	h.repo.GetDB().Create(&item)
 	c.JSON(http.StatusCreated, gin.H{"message": "Излучение добавлено в расчет"})
 }
 
 // @Summary Обновление элемента в корзине
-// @Tags Корзина
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param input body M2MInput true "Новые параметры"
-// @Success 200 "Успешно"
-// @Router /api/calculation-items [put]
 func (h *Handler) UpdateCalculationItemAPI(c *gin.Context) {
 	var input M2MInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -188,23 +152,29 @@ func (h *Handler) UpdateCalculationItemAPI(c *gin.Context) {
 		return
 	}
 
-	h.repo.GetDB().Model(&ds.CalculationItem{}).
-		Where("calculation_id = ? AND radiation_id = ?", draft.ID, input.RadiationID).
-		Updates(map[string]interface{}{
-			"area":          input.Area,
-			"efficiency":    input.Efficiency,
-			"frequency":     input.Frequency,
-			"work_function": input.WorkFunction,
-		})
+	var item ds.CalculationItem
+	if err := h.repo.GetDB().Where("calculation_id = ? AND radiation_id = ?", draft.ID, input.RadiationID).First(&item).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Услуга не найдена в заявке"})
+		return
+	}
+
+	// ЖЕСТКО обновляем все переданные поля напрямую в структуре
+	item.Area = input.Area
+	item.Efficiency = input.Efficiency
+	item.Frequency = input.Frequency
+	item.WorkFunction = input.WorkFunction
+	item.IsPriority = input.IsPriority
+
+	// Сохраняем всю строку целиком (GORM не проигнорирует bool)
+	if err := h.repo.GetDB().Save(&item).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения в БД"})
+		return
+	}
+
 	c.Status(http.StatusOK)
 }
 
 // @Summary Удаление элемента из корзины
-// @Tags Корзина
-// @Security BearerAuth
-// @Param radiation_id query int true "ID Излучения"
-// @Success 204 "Успешно удалено"
-// @Router /api/calculation-items [delete]
 func (h *Handler) DeleteCalculationItemAPI(c *gin.Context) {
 	radiationID := c.Query("radiation_id")
 
@@ -221,14 +191,9 @@ func (h *Handler) DeleteCalculationItemAPI(c *gin.Context) {
 // === ДОМЕН ЗАЯВКИ (РАСЧЕТЫ) ===
 
 // @Summary Получение иконки корзины (сводка черновика)
-// @Tags Заявки
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router /api/calculations/draft-summary [get]
 func (h *Handler) GetDraftSummaryAPI(c *gin.Context) {
 	physicistID := h.getPhysicistID(c)
 
-	// Если пользователь не авторизован (нет ID), возвращаем пустую корзину (статус 200)
 	if physicistID == 0 {
 		c.JSON(http.StatusOK, gin.H{"draft_id": nil, "count": 0})
 		return
@@ -243,14 +208,6 @@ func (h *Handler) GetDraftSummaryAPI(c *gin.Context) {
 }
 
 // @Summary Список всех сформированных заявок (с фильтрами)
-// @Tags Заявки
-// @Security BearerAuth
-// @Produce json
-// @Param status query string false "Фильтр по статусу"
-// @Param date_from query string false "Дата от (YYYY-MM-DD)"
-// @Param date_to query string false "Дата до (YYYY-MM-DD)"
-// @Success 200 {array} map[string]interface{}
-// @Router /api/calculations [get]
 func (h *Handler) GetCalculationsAPI(c *gin.Context) {
 	dateFrom := c.Query("date_from")
 	dateTo := c.Query("date_to")
@@ -259,8 +216,6 @@ func (h *Handler) GetCalculationsAPI(c *gin.Context) {
 	var calculations []ds.RadiationCalculation
 	db := h.repo.GetDB().Preload("Physicist").Preload("Items").Where("status NOT IN ('draft', 'удалён')")
 
-	// Если обычный Физик - видит только свои
-	// Если Профессор - видит все
 	roleVal, _ := c.Get("role")
 	if roleVal == role.Physicist {
 		db = db.Where("physicist_id = ?", h.getPhysicistID(c))
@@ -278,13 +233,21 @@ func (h *Handler) GetCalculationsAPI(c *gin.Context) {
 	var result []map[string]interface{}
 	for _, req := range calculations {
 		validItemsCount := 0
+		hasPriority := false // <--- Флаг наличия срочных элементов
+
 		for _, item := range req.Items {
 			if item.CalculatedCurrent > 0 {
 				validItemsCount++
 			}
+			if item.IsPriority { // Если хоть один Item срочный
+				hasPriority = true
+			}
 		}
+
 		result = append(result, map[string]interface{}{
 			"id":                  req.ID,
+			"theme":               req.Theme,   // Передаем тему для фронтенда
+			"is_priority":         hasPriority, // Передаем флаг для красного бейджика в журнале!
 			"status":              req.Status,
 			"created_at":          req.CreatedAt,
 			"formed_at":           req.FormedAt,
@@ -297,11 +260,6 @@ func (h *Handler) GetCalculationsAPI(c *gin.Context) {
 }
 
 // @Summary Получение заявки по ID
-// @Tags Заявки
-// @Security BearerAuth
-// @Param id path int true "ID Заявки"
-// @Success 200 {object} ds.RadiationCalculation
-// @Router /api/calculations/{id} [get]
 func (h *Handler) GetCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var req ds.RadiationCalculation
@@ -312,33 +270,53 @@ func (h *Handler) GetCalculationAPI(c *gin.Context) {
 	c.JSON(http.StatusOK, req)
 }
 
-// @Summary Изменение описания заявки
-// @Tags Заявки
-// @Security BearerAuth
-// @Param id path int true "ID Заявки"
-// @Param input body map[string]string true "Описание"
-// @Success 200 "Успешно"
-// @Router /api/calculations/{id} [put]
+// Универсальная структура для обновления полей заявки
+type UpdateCalculationRequest struct {
+	Theme        *string  `json:"theme"`
+	Description  *string  `json:"description"`
+	TotalCurrent *float64 `json:"total_current"`
+}
+
+// @Summary Изменение полей заявки (тема, описание, итог)
 func (h *Handler) UpdateCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
-	var input struct {
-		Description string `json:"description"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
+	var req UpdateCalculationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных"})
 		return
 	}
-	h.repo.GetDB().Model(&ds.RadiationCalculation{}).Where("id = ? AND physicist_id = ?", id, h.getPhysicistID(c)).Update("description", input.Description)
-	c.Status(http.StatusOK)
+
+	var calc ds.RadiationCalculation
+	if err := h.repo.GetDB().First(&calc, "id = ? AND physicist_id = ?", id, h.getPhysicistID(c)).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Заявка не найдена"})
+		return
+	}
+
+	if calc.Status != "draft" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Изменять поля можно только у черновика"})
+		return
+	}
+
+	if req.Theme != nil {
+		calc.Theme = *req.Theme
+	}
+	if req.Description != nil {
+		calc.Description = *req.Description
+	}
+	if req.TotalCurrent != nil {
+		calc.TotalCurrent = *req.TotalCurrent
+	}
+
+	if err := h.repo.GetDB().Save(&calc).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при сохранении"})
+		return
+	}
+
+	c.JSON(http.StatusOK, calc)
 }
 
 // @Summary Сформировать заявку (запуск расчетов)
-// @Description Переводит заявку из draft в сформирован и считает формулы
-// @Tags Заявки
-// @Security BearerAuth
-// @Param id path int true "ID Заявки"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/calculations/{id}/form [put]
 func (h *Handler) FormCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var req ds.RadiationCalculation
@@ -399,13 +377,6 @@ func (h *Handler) FormCalculationAPI(c *gin.Context) {
 }
 
 // @Summary Завершение или отклонение заявки
-// @Description Доступно только Профессору
-// @Tags Заявки
-// @Security BearerAuth
-// @Param id path int true "ID Заявки"
-// @Param input body map[string]string true "Action: accept / reject"
-// @Success 200 {object} map[string]string
-// @Router /api/calculations/{id}/complete [put]
 func (h *Handler) CompleteCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	var input struct {
@@ -439,11 +410,6 @@ func (h *Handler) CompleteCalculationAPI(c *gin.Context) {
 }
 
 // @Summary Логическое удаление заявки
-// @Tags Заявки
-// @Security BearerAuth
-// @Param id path int true "ID Заявки"
-// @Success 204 "Успешно"
-// @Router /api/calculations/{id} [delete]
 func (h *Handler) DeleteCalculationAPI(c *gin.Context) {
 	id := c.Param("id")
 	h.repo.GetDB().Model(&ds.RadiationCalculation{}).Where("id = ? AND physicist_id = ?", id, h.getPhysicistID(c)).Update("status", "удалён")
@@ -459,12 +425,6 @@ func hashPassword(pass string) string {
 }
 
 // @Summary Регистрация пользователя
-// @Tags Пользователи
-// @Accept json
-// @Produce json
-// @Param input body map[string]interface{} true "Данные регистрации"
-// @Success 201 {object} ds.Physicist
-// @Router /api/users/register [post]
 func (h *Handler) RegisterAPI(c *gin.Context) {
 	var input struct {
 		Login    string `json:"login" binding:"required"`
@@ -492,13 +452,6 @@ func (h *Handler) RegisterAPI(c *gin.Context) {
 }
 
 // @Summary Авторизация (Login)
-// @Description Выдает JWT токен в случае успешной авторизации
-// @Tags Пользователи
-// @Accept json
-// @Produce json
-// @Param input body map[string]string true "Креды (login, password)"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/users/login [post]
 func (h *Handler) LoginAPI(c *gin.Context) {
 	var input struct {
 		Login    string `json:"login"`
@@ -520,7 +473,6 @@ func (h *Handler) LoginAPI(c *gin.Context) {
 		return
 	}
 
-	// Генерируем JWT
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &JWTClaims{
 		PhysicistID: physicist.ID,
@@ -539,17 +491,17 @@ func (h *Handler) LoginAPI(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"access_token": tokenString,
-		"expires_in":   expirationTime.Unix(),
-		"role":         physicist.Role,
+		"token": tokenString,
+		"user": gin.H{
+			"id":    physicist.ID,
+			"login": physicist.Login,
+			"role":  physicist.Role,
+		},
+		"expires_in": expirationTime.Unix(),
 	})
 }
 
 // @Summary Выход (Logout)
-// @Description Помещает переданный JWT в Blacklist Redis'а
-// @Tags Пользователи
-// @Security BearerAuth
-// @Router /api/users/logout [post]
 func (h *Handler) LogoutAPI(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if !strings.HasPrefix(authHeader, jwtPrefix) {
@@ -559,18 +511,15 @@ func (h *Handler) LogoutAPI(c *gin.Context) {
 
 	tokenStr := authHeader[len(jwtPrefix):]
 
-	// Парсим токен, чтобы узнать его время жизни
 	token, _ := jwt.ParseWithClaims(tokenStr, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil
 	})
 
 	var expTime time.Duration = 24 * time.Hour
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		// Оставляем в Redis ровно до истечения срока действия самого токена
 		expTime = time.Until(time.Unix(claims.ExpiresAt, 0))
 	}
 
-	// Записываем токен в Blacklist Redis
 	h.repo.GetRedis().Set(c.Request.Context(), "blacklist:"+tokenStr, true, expTime)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Вы успешно вышли из системы"})

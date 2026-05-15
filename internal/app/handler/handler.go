@@ -26,6 +26,7 @@ func NewHandler(repo *repository.Repository) *Handler {
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.Use(CORSMiddleware())
 
+	// Старые HTML-роуты (SSR)
 	router.GET("/", h.GetServiceList)
 	router.GET("/service/:id", h.GetServiceDetail)
 	router.GET("/radiation_calculation/:id", h.GetCalculationByID)
@@ -41,6 +42,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	// Swagger Route
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// REST API для React (SPA)
 	api := router.Group("/api")
 	{
 		// Общедоступные (Guest)
@@ -196,10 +198,8 @@ func (h *Handler) GetCalculationByID(c *gin.Context) {
 		workFunc_J := workFunc_eV * e_charge
 		E_k_J := E_photon_J - workFunc_J
 
-		request.Items[i].KineticEnergy = E_k_J / e_charge
-
 		if E_k_J <= 0 {
-			request.Items[i].KineticEnergy = 0
+
 			request.Items[i].CalculatedCurrent = -1
 			h.repo.GetDB().Save(&request.Items[i])
 			continue
@@ -247,7 +247,6 @@ func (h *Handler) AddToCalculation(c *gin.Context) {
 	frequency, _ := strconv.ParseFloat(freqStr, 64)
 	workFunc, _ := strconv.ParseFloat(workFuncStr, 64)
 
-	// Подставляем дефолтные значения для старых HTML-форм, если юзер не ввел параметры
 	if frequency == 0 {
 		frequency = 1e15
 	}
@@ -335,15 +334,11 @@ func (h *Handler) StatusCalculation(c *gin.Context) {
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Разрешаем запросы с любых адресов
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		// Разрешаем нужные заголовки
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		// Разрешаем методы, включая OPTIONS!
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 
-		// Если это предварительный запрос браузера (OPTIONS) - просто отвечаем 204 и не пускаем дальше
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return

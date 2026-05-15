@@ -12,6 +12,7 @@ type RadiationCalculation struct {
 	CompletedAt *time.Time `gorm:"default:null" json:"completed_at"`
 
 	Description  string  `gorm:"type:text" json:"description"`
+	Theme        string  `gorm:"type:varchar(255);default:''"`
 	TotalCurrent float64 `gorm:"type:decimal(10,4);default:0" json:"total_current"`
 
 	Physicist Physicist         `gorm:"foreignKey:PhysicistID" json:"physicist"`

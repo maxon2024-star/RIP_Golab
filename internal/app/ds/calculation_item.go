@@ -4,14 +4,15 @@ type CalculationItem struct {
 	ID                uint    `gorm:"primaryKey" json:"id"`
 	CalculationID     uint    `gorm:"not null" json:"calculation_id"`
 	RadiationID       uint    `gorm:"not null" json:"radiation_id"`
-	Area              float64 `gorm:"type:decimal(10,2)" json:"area"`               // Площадь (вводится юзером)
-	Efficiency        float64 `gorm:"type:decimal(5,2)" json:"efficiency"`          // КПД (вводится юзером)
-	Frequency         float64 `gorm:"type:decimal(20,2)" json:"frequency"`          // Частота (вводится юзером)
-	WorkFunction      float64 `gorm:"type:decimal(10,2)" json:"work_function"`      // Энергия выхода (вводится юзером)
-	KineticEnergy     float64 `gorm:"type:decimal(10,2)" json:"kinetic_energy"`     // Рассчитывается
-	CalculatedCurrent float64 `gorm:"type:decimal(15,5)" json:"calculated_current"` // Рассчитывается
+	Frequency         float64 `gorm:"type:decimal(20,4)" json:"frequency"`
+	WorkFunction      float64 `gorm:"type:decimal(10,4)" json:"work_function"`
+	Area              float64 `gorm:"type:decimal(10,4)" json:"area"`
+	Efficiency        float64 `gorm:"type:decimal(5,2)" json:"efficiency"`
+	CalculatedCurrent float64 `gorm:"type:decimal(15,4)" json:"calculated_current"`
+	IsPriority        bool    `gorm:"default:false" json:"is_priority"`
 
-	Radiation RadiationRange `gorm:"foreignKey:RadiationID" json:"radiation"`
+	Radiation   RadiationRange       `gorm:"foreignKey:RadiationID" json:"radiation"`
+	Calculation RadiationCalculation `gorm:"foreignKey:CalculationID" json:"calculation"`
 }
 
 func (CalculationItem) TableName() string {
